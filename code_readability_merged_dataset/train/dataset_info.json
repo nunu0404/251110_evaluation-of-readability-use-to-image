@@ -1,0 +1,42 @@
+{
+  "builder_name": "parquet",
+  "citation": "",
+  "config_name": "default",
+  "dataset_name": "code-readability-merged",
+  "dataset_size": 354592,
+  "description": "",
+  "download_checksums": {
+    "hf://datasets/se2p/code-readability-merged@118fffe0e261cddc229ced358a6f480749ac287b/data/train-00000-of-00001-0fed3ec6d8b65a84.parquet": {
+      "num_bytes": 139793,
+      "checksum": null
+    }
+  },
+  "download_size": 139793,
+  "features": {
+    "code_snippet": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "score": {
+      "dtype": "float64",
+      "_type": "Value"
+    }
+  },
+  "homepage": "",
+  "license": "",
+  "size_in_bytes": 494385,
+  "splits": {
+    "train": {
+      "name": "train",
+      "num_bytes": 354592,
+      "num_examples": 421,
+      "dataset_name": "code-readability-merged"
+    }
+  },
+  "version": {
+    "version_str": "0.0.0",
+    "major": 0,
+    "minor": 0,
+    "patch": 0
+  }
+}

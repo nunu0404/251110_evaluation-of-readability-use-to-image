@@ -1,0 +1,1472 @@
+id,code,readability
+sample_00282,"/**
+	 * add statistics report of a DB query
+	 *
+	 * @param rows rows count returned
+	 * @param time time taken
+	 */
+	void executed(long rows, long time) {
+		// read lock is enough, concurrent updates are supported by the underlying type AtomicLong
+		// this only guards executed(long, long) to be called, when another thread is executing getExecutionAvgTime()
+		readLock.lock();
+		try {
+			// Less chances for a context switch
+			for (long old = executionMinTime.get(); (time < old) && !executionMinTime.compareAndSet(old, time); old = executionMinTime.get());
+			for (long old = executionMaxTime.get(); (time > old) && !executionMaxTime.compareAndSet(old, time); old = executionMaxTime.get());
+			executionCount.getAndIncrement();
+			executionRowCount.addAndGet(rows);
+			totalExecutionTime.addAndGet(time);
+		} finally {
+			readLock.unlock();
+		}
+	}",3.3333333333333335
+sample_00254,"/**
+	 * Generate a select list of columns containing all properties of the entity classes
+	 */
+	protected final String selectString(List associations)
+	throws MappingException {
+
+		if ( associations.size()==0 ) {
+			return """";
+		}
+		else {
+			StringBuilder buf = new StringBuilder( associations.size() * 100 );
+			int entityAliasCount=0;
+			int collectionAliasCount=0;
+			for ( int i=0; i<associations.size(); i++ ) {
+				OuterJoinableAssociation join = (OuterJoinableAssociation) associations.get(i);
+				OuterJoinableAssociation next = (i == associations.size() - 1)
+				        ? null
+				        : ( OuterJoinableAssociation ) associations.get( i + 1 );
+				final Joinable joinable = join.getJoinable();
+				final String entitySuffix = ( suffixes == null || entityAliasCount >= suffixes.length )
+				        ? null
+				        : suffixes[entityAliasCount];
+				final String collectionSuffix = ( collectionSuffixes == null || collectionAliasCount >= collectionSuffixes.length )
+				        ? null
+				        : collectionSuffixes[collectionAliasCount];
+				final String selectFragment = joinable.selectFragment(
+						next == null ? null : next.getJoinable(),
+						next == null ? null : next.getRHSAlias(),
+						join.getRHSAlias(),
+						entitySuffix,
+				        collectionSuffix,
+						join.getJoinType()==JoinType.LEFT_OUTER_JOIN
+				);
+				if (selectFragment.trim().length() > 0) {
+					buf.append("", "").append(selectFragment);
+				}
+				if ( joinable.consumesEntityAlias() ) entityAliasCount++;
+				if ( joinable.consumesCollectionAlias() && join.getJoinType()==JoinType.LEFT_OUTER_JOIN ) collectionAliasCount++;
+			}
+			return buf.toString();
+		}
+	}",2.5555555555555554
+sample_00350,"@Test
+   public void testBuildEntityCollectionRegionOverridesOnly() {
+      AdvancedCache cache;
+      Properties p = new Properties();
+      p.setProperty(""hibernate.cache.infinispan.entity.eviction.strategy"", ""LIRS"");
+      p.setProperty(""hibernate.cache.infinispan.entity.eviction.wake_up_interval"", ""3000"");
+      p.setProperty(""hibernate.cache.infinispan.entity.eviction.max_entries"", ""30000"");
+      p.setProperty(""hibernate.cache.infinispan.collection.eviction.strategy"", ""LRU"");
+      p.setProperty(""hibernate.cache.infinispan.collection.eviction.wake_up_interval"", ""3500"");
+      p.setProperty(""hibernate.cache.infinispan.collection.eviction.max_entries"", ""35000"");
+      InfinispanRegionFactory factory = createRegionFactory(p);
+      try {
+         factory.getCacheManager();
+         EntityRegionImpl region = (EntityRegionImpl) factory.buildEntityRegion(""com.acme.Address"", p, null);
+         assertNull(factory.getTypeOverrides().get(""com.acme.Address""));
+         cache = region.getCache();
+         Configuration cacheCfg = cache.getCacheConfiguration();
+         assertEquals(EvictionStrategy.LIRS, cacheCfg.eviction().strategy());
+         assertEquals(3000, cacheCfg.expiration().wakeUpInterval());
+         assertEquals(30000, cacheCfg.eviction().maxEntries());
+         // Max idle value comes from base XML configuration
+         assertEquals(100000, cacheCfg.expiration().maxIdle());
+
+         CollectionRegionImpl collectionRegion = (CollectionRegionImpl)
+               factory.buildCollectionRegion(""com.acme.Person.addresses"", p, null);
+         assertNull(factory.getTypeOverrides().get(""com.acme.Person.addresses""));
+         cache = collectionRegion.getCache();
+         cacheCfg = cache.getCacheConfiguration();
+         assertEquals(EvictionStrategy.LRU, cacheCfg.eviction().strategy());
+         assertEquals(3500, cacheCfg.expiration().wakeUpInterval());
+         assertEquals(35000, cacheCfg.eviction().maxEntries());
+         assertEquals(100000, cacheCfg.expiration().maxIdle());
+      } finally {
+         factory.stop();
+      }
+   }",3.2222222222222223
+sample_00004,"			try {
+				if (selenium.isVisible(""//section"")) {
+					break;
+				}
+			}
+			catch (Exception e) {
+			}
+
+			Thread.sleep(1000);
+		}
+",3.5434782608695654
+sample_00256,"public boolean equals(Table table) {
+		if (null == table) {
+			return false;
+		}
+		if (this == table) {
+			return true;
+		}
+
+		return isQuoted() ? name.equals(table.getName()) : name.equalsIgnoreCase(table.getName())
+			&& ((schema == null && table.getSchema() != null) ? false : (schema == null) ? true : isSchemaQuoted() ? schema.equals(table.getSchema()) : schema.equalsIgnoreCase(table.getSchema()))
+			&& ((catalog == null && table.getCatalog() != null) ? false : (catalog == null) ? true : isCatalogQuoted() ? catalog.equals(table.getCatalog()) : catalog.equalsIgnoreCase(table.getCatalog()));
+	}",2.2222222222222223
+sample_00377,"public void buildModel() {
+        if (getTarget() != null) {
+            Object target = getTarget();
+            Object kind = Model.getFacade().getAggregation(target);
+            if (kind == null
+                    || kind.equals(
+                            Model.getAggregationKind().getNone())) {
+                setSelected(ActionSetAssociationEndAggregation.NONE_COMMAND);
+            } else {
+		if (kind.equals(
+		        Model.getAggregationKind().getAggregate())) {
+		    setSelected(ActionSetAssociationEndAggregation
+		            .AGGREGATE_COMMAND);
+		} else {
+		    if (kind.equals(
+		            Model.getAggregationKind()
+		            	.getComposite())) {
+			setSelected(ActionSetAssociationEndAggregation
+			        .COMPOSITE_COMMAND);
+		    } else {
+		        setSelected(ActionSetAssociationEndAggregation
+
+			        .NONE_COMMAND);
+		    }
+		}
+            }
+        }
+    }",2.5555555555555554
+sample_00100,"		String[]	labels,
+		String	 	defaultValue );
+
+	/**
+	 * 
+	 * @param key
+	 * @param resource_name
+	 * @param encoding_type
+	 * @param defaultValue
+	 * @return
+	 * @since 2.1.0.2
+	 */
+	public PasswordParameter
+	addPasswordParameter2(
+		String 		key,
+		String 		resource_name,
+		int			encoding_type,		// see PasswordParameter.ET_ constants
+		byte[]	 	defaultValue );		// plain default value
+
+	/**
+	 * 
+	 * @param key
+	 * @param resource_name
+	 * @param defaultValue
+	 * @return
+	 * @since 2.1.0.2
+	 */
+	public IntParameter
+	addIntParameter2(
+		String 		key,
+		String 		resource_name,
+		int	 		defaultValue );
+
+	/**
+	 * 
+	 * @param key
+	 * @param resource_name
+	 * @param defaultValue
+	 * @param min_value Minimum allowed value
+	 * @param max_value Maximum allowed value
+	 * @return
+	 * @since 3.0.3.5
+	 */
+	public IntParameter
+	addIntParameter2(
+		String 		key,
+		String 		resource_name,
+		int	 		defaultValue,
+		int         min_value,
+		int         max_value);
+",3.0753768844221105
+sample_00226,"/**
+     * {@inheritDoc}
+     *
+     * Overridden to find the start of a line-end.
+     */
+    public boolean addChar(char c) {
+	if (c == '\n') {
+	    hasLf = true;
+	    return true;
+	}
+
+	if (c == '\r') {
+	    hasCr = true;
+	    return true;
+	}
+
+	return false;
+    }",4.555555555555555
+sample_00360,"@Test
+	public void testUpdateParentOneChildDiffCollectionDiffChild() {
+		CollectionListeners listeners = new CollectionListeners( sessionFactory() );
+		ParentWithCollection parent = createParentWithOneChild( ""parent"", ""child"" );
+		Child oldChild = ( Child ) parent.getChildren().iterator().next();
+		listeners.clear();
+		assertEquals( 1, parent.getChildren().size() );
+		Session s = openSession();
+		Transaction tx = s.beginTransaction();
+		parent = ( ParentWithCollection ) s.get( parent.getClass(), parent.getId() );
+		if ( oldChild instanceof Entity ) {
+			oldChild = ( Child ) s.get( oldChild.getClass(), ( ( Entity ) oldChild).getId() );
+		}
+		Collection oldCollection = parent.getChildren();
+		parent.newChildren( createCollection() );
+		Child newChild = parent.addChild( ""new1"" );
+		tx.commit();
+		s.close();
+		int index = 0;
+		if ( ( (PersistentCollection) oldCollection ).wasInitialized() ) {
+			checkResult( listeners, listeners.getInitializeCollectionListener(), parent, oldCollection, index++ );
+		}
+		if ( oldChild instanceof ChildWithBidirectionalManyToMany ) {
+			ChildWithBidirectionalManyToMany oldChildWithManyToMany = ( ChildWithBidirectionalManyToMany ) oldChild;
+			if ( ( ( PersistentCollection ) oldChildWithManyToMany.getParents() ).wasInitialized() ) {
+				checkResult( listeners, listeners.getInitializeCollectionListener(), oldChildWithManyToMany, index++ );
+			}
+		}
+		checkResult( listeners, listeners.getPreCollectionRemoveListener(), parent, oldCollection, index++ );
+		checkResult( listeners, listeners.getPostCollectionRemoveListener(), parent, oldCollection, index++ );
+		if ( oldChild instanceof ChildWithBidirectionalManyToMany ) {
+			checkResult( listeners, listeners.getPreCollectionUpdateListener(), ( ChildWithBidirectionalManyToMany ) oldChild, index++ );
+			checkResult( listeners, listeners.getPostCollectionUpdateListener(), ( ChildWithBidirectionalManyToMany ) oldChild, index++ );
+			checkResult( listeners, listeners.getPreCollectionRecreateListener(), ( ChildWithBidirectionalManyToMany ) newChild, index++ );
+			checkResult( listeners, listeners.getPostCollectionRecreateListener(), ( ChildWithBidirectionalManyToMany ) newChild, index++ );
+		}
+		checkResult( listeners, listeners.getPreCollectionRecreateListener(), parent, index++ );
+		checkResult( listeners, listeners.getPostCollectionRecreateListener(), parent, index++ );
+		checkNumberOfResults( listeners, index );
+	}",2.4444444444444446
+sample_00213,"		private Method getParametersMethod() throws Exception {
+			for (Method each : fKlass.getMethods()) {
+				if (Modifier.isStatic(each.getModifiers())) {
+					Annotation[] annotations= each.getAnnotations();
+					for (Annotation annotation : annotations) {
+						if (annotation.annotationType() == Parameters.class)
+							return each;
+					}
+				}
+			}
+			throw new Exception(""No public static parameters method on class ""
+					+ getName());
+",2.355371900826446
+sample_00171,"	private static String getBaseName( String className ) 
+	{
+		int i = className.indexOf(""$"");
+		if ( i == -1 )
+			return className;
+
+		return className.substring(i+1);
+",3.9173553719008263
+sample_00098,"/**
+ * @author Brian Wing Shun Chan
+ */
+public class ViewSitePublicPageDropDownTests extends BaseTestSuite {
+	public static Test suite() {
+		TestSuite testSuite = new TestSuite();
+		testSuite.addTestSuite(AddSitesTest.class);
+		testSuite.addTestSuite(AddSitesPublicPageTest.class);
+		testSuite.addTestSuite(ViewSitesPublicPageDropDownTest.class);
+		testSuite.addTestSuite(TearDownSitesTest.class);
+",3.7801047120418847
+sample_00292,"@Test
+	@TestForIssue( jiraKey = ""HHH-21"" )
+    public void testCompositeIdId() throws HibernateException, SQLException {
+        Session s = openSession();
+		s.beginTransaction();
+        CompositeIdId id = new CompositeIdId();
+        id.setName(""Max"");
+        id.setSystem(""c64"");
+        id.setId(""games"");
+        s.save(id);
+		s.getTransaction().commit();
+        s.close();
+
+        s = openSession();
+		s.beginTransaction();
+        // having a composite id with one property named id works since the map used by sqlloader to map names to properties handles it.
+		String sql = ""select system as {c.system}, id as {c.id}, name as {c.name}, foo as {c.composite.foo}, bar as {c.composite.bar} from CompositeIdId where system=? and id=?"";
+		SQLQuery query = s.createSQLQuery( sql ).addEntity( ""c"", CompositeIdId.class );
+        query.setString(0, ""c64"");
+        query.setString(1, ""games"");
+
+        CompositeIdId id2 = (CompositeIdId) query.uniqueResult();
+        check(id, id2);
+
+		s.getTransaction().commit();
+        s.close();
+
+        s = openSession();
+		s.beginTransaction();
+        CompositeIdId useForGet = new CompositeIdId();
+        useForGet.setSystem(""c64"");
+        useForGet.setId(""games"");
+        // this doesn't work since the verification does not take column span into respect!
+        CompositeIdId getted = (CompositeIdId) s.get(CompositeIdId.class, useForGet);
+        check(id,getted);
+		s.getTransaction().commit();
+        s.close();
+    }",3.2222222222222223
+sample_00215,"        InGameInputHandler inGameInputHandler = freeColClient.getInGameInputHandler();
+
+        freeColClient.getClient().setMessageHandler(inGameInputHandler);
+        gui.setInGame(true);
+",3.190082644628099
+sample_00061,"		com.liferay.portal.service.ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException {
+		try {
+			MethodKey methodKey = new MethodKey(LayoutSetPrototypeServiceUtil.class.getName(),
+					""updateLayoutSetPrototype"",
+					_updateLayoutSetPrototypeParameterTypes4);
+
+			MethodHandler methodHandler = new MethodHandler(methodKey,
+					layoutSetPrototypeId, nameMap, description, active,
+					layoutsUpdateable, serviceContext);
+
+			Object returnObj = null;
+
+			try {
+				returnObj = TunnelUtil.invoke(httpPrincipal, methodHandler);
+			}
+			catch (Exception e) {
+				if (e instanceof com.liferay.portal.kernel.exception.PortalException) {
+					throw (com.liferay.portal.kernel.exception.PortalException)e;
+				}
+
+				if (e instanceof com.liferay.portal.kernel.exception.SystemException) {
+					throw (com.liferay.portal.kernel.exception.SystemException)e;
+				}
+
+				throw new com.liferay.portal.kernel.exception.SystemException(e);
+			}
+
+			return (com.liferay.portal.model.LayoutSetPrototype)returnObj;
+		}
+		catch (com.liferay.portal.kernel.exception.SystemException se) {
+			_log.error(se, se);
+
+			throw se;
+		}
+	}
+
+	public static com.liferay.portal.model.LayoutSetPrototype updateLayoutSetPrototype(
+		HttpPrincipal httpPrincipal, long layoutSetPrototypeId,
+		java.lang.String settings)
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException {
+		try {
+			MethodKey methodKey = new MethodKey(LayoutSetPrototypeServiceUtil.class.getName(),
+					""updateLayoutSetPrototype"",
+					_updateLayoutSetPrototypeParameterTypes5);
+
+			MethodHandler methodHandler = new MethodHandler(methodKey,
+					layoutSetPrototypeId, settings);
+",2.612021857923497
+sample_00047,"			layoutRevision.setCreateDate(serviceContext.getCreateDate(now));
+			layoutRevision.setModifiedDate(serviceContext.getModifiedDate(now));
+			layoutRevision.setLayoutSetBranchId(
+				oldLayoutRevision.getLayoutSetBranchId());
+			layoutRevision.setParentLayoutRevisionId(
+				oldLayoutRevision.getLayoutRevisionId());
+			layoutRevision.setHead(false);
+			layoutRevision.setLayoutBranchId(layoutBranchId);
+			layoutRevision.setPlid(oldLayoutRevision.getPlid());
+			layoutRevision.setPrivateLayout(
+				oldLayoutRevision.isPrivateLayout());
+			layoutRevision.setName(name);
+			layoutRevision.setTitle(title);
+			layoutRevision.setDescription(description);
+			layoutRevision.setKeywords(keywords);
+			layoutRevision.setRobots(robots);
+			layoutRevision.setTypeSettings(typeSettings);
+
+			if (iconImage) {
+				layoutRevision.setIconImage(iconImage);
+				layoutRevision.setIconImageId(iconImageId);
+			}
+
+			layoutRevision.setThemeId(themeId);
+			layoutRevision.setColorSchemeId(colorSchemeId);
+			layoutRevision.setWapThemeId(wapThemeId);
+			layoutRevision.setWapColorSchemeId(wapColorSchemeId);
+			layoutRevision.setCss(css);
+			layoutRevision.setStatus(WorkflowConstants.STATUS_DRAFT);
+			layoutRevision.setStatusDate(serviceContext.getModifiedDate(now));
+",2.4827586206896552
+sample_00032,"				WorkflowConstants.CONTEXT_ENTRY_CLASS_NAME));
+
+		if (workflowContext.containsKey(
+				WorkflowConstants.CONTEXT_ENTRY_CLASS_PK)) {
+
+			kaleoInstanceToken.setClassPK(
+				GetterUtil.getLong(
+					(String)workflowContext.get(
+						WorkflowConstants.CONTEXT_ENTRY_CLASS_PK)));
+		}
+",2.764940239043825
+sample_00267,"public void updateListener(PropertyChangeListener listener, 
+            Object modelElement,
+            PropertyChangeEvent pce) {
+        Object obj = pce.getSource();
+        if ((obj == modelElement) 
+                && ""stereotype"".equals(pce.getPropertyName())) {
+            if (pce instanceof AddAssociationEvent 
+                    && Model.getFacade().isAStereotype(pce.getNewValue())) {
+                // new stereotype
+                addElementListener(
+                        listener, 
+                        pce.getNewValue(), 
+                        new String[] {""name"", ""remove""});
+            }
+            if (pce instanceof RemoveAssociationEvent 
+                    && Model.getFacade().isAStereotype(pce.getOldValue())) {
+                // removed stereotype
+                removeElementListener(
+                        listener, 
+                        pce.getOldValue());
+            }
+        }
+    }",3.6666666666666665
+sample_00200,"    /**
+     * Closes all panels, changes the background and shows the main menu.
+     */
+    public void returnToTitle() {
+        // TODO: check if the GUI object knows that we're not
+        // inGame. (Retrieve value of GUI::inGame.)  If GUI thinks
+        // we're still in the game then log an error because at this
+        // point the GUI should have been informed.
+        closeMenus();
+        removeInGameComponents();
+        showMainPanel();
+",4.148760330578512
+sample_00375,"public void setEnclosingFig(Fig encloser) {
+        if (getOwner() != null) {
+            Object nod = getOwner();
+            if (encloser != null) {
+                Object comp = encloser.getOwner();
+                if (Model.getFacade().isAComponentInstance(comp)) {
+                    if (Model.getFacade().getComponentInstance(nod) != comp) {
+                        Model.getCommonBehaviorHelper()
+                                .setComponentInstance(nod, comp);
+                        super.setEnclosingFig(encloser);
+                    }
+                } else if (Model.getFacade().isANode(comp)) {
+                    super.setEnclosingFig(encloser);
+                }
+            } else if (encloser == null) {
+                if (isVisible() 
+                        // If we are not visible most likely 
+                        // we're being deleted.
+                    // TODO: This indicates a more fundamental problem that should
+                    // be investigated - tfm - 20061230
+                    && Model.getFacade().getComponentInstance(nod) 
+                                    != null) {
+                    Model.getCommonBehaviorHelper()
+                            .setComponentInstance(nod, null);
+                    super.setEnclosingFig(encloser);
+                }
+            }
+        }
+
+        if (getLayer() != null) {
+            // elementOrdering(figures);
+            Collection contents = new ArrayList(getLayer().getContents());
+            Iterator it = contents.iterator();
+            while (it.hasNext()) {
+                Object o = it.next();
+                if (o instanceof FigEdgeModelElement) {
+                    FigEdgeModelElement figedge = (FigEdgeModelElement) o;
+                    figedge.getLayer().bringToFront(figedge);
+                }
+            }
+        }
+    }",2.888888888888889
+sample_00027,"package net.sourceforge.squirrel_sql.plugins.graph;
+
+import java.awt.*;
+
+public class ConnectionPoints
+{
+   Point[] points;
+   boolean pointsAreLeftOfWindow;
+
+",4.148
+sample_00331,"@SuppressWarnings( {""SimplifiableIfStatement""})
+	private boolean isUnequivocallyNonDirty(Object entity) {
+
+		if(entity instanceof SelfDirtinessTracker)
+			return ((SelfDirtinessTracker) entity).$$_hibernate_hasDirtyAttributes();
+
+		final CustomEntityDirtinessStrategy customEntityDirtinessStrategy =
+				persistenceContext.getSession().getFactory().getCustomEntityDirtinessStrategy();
+		if ( customEntityDirtinessStrategy.canDirtyCheck( entity, getPersister(), (Session) persistenceContext.getSession() ) ) {
+			return ! customEntityDirtinessStrategy.isDirty( entity, getPersister(), (Session) persistenceContext.getSession() );
+		}
+
+		if ( getPersister().hasMutableProperties() ) {
+			return false;
+		}
+
+		if ( getPersister().getInstrumentationMetadata().isInstrumented() ) {
+			// the entity must be instrumented (otherwise we cant check dirty flag) and the dirty flag is false
+			return ! getPersister().getInstrumentationMetadata().extractInterceptor( entity ).isDirty();
+		}
+
+		return false;
+	}",3.0
+sample_00230,"private void myDoubleClick(Object src) {
+	Object sel = null;
+	Diagram d = null;
+	if (src == resultsTable) {
+	    int row = resultsTable.getSelectionModel().getMinSelectionIndex();
+	    if (row < 0) {
+                return;
+            }
+	    sel = results.elementAt(row);
+	    d = (Diagram) diagrams.elementAt(row);
+	} else if (src == relatedTable) {
+	    int row = relatedTable.getSelectionModel().getMinSelectionIndex();
+	    if (row < 0) {
+                return;
+            }
+	    numJumpToRelated++;
+	    sel = related.elementAt(row);
+	}
+
+	if (d != null) {
+            LOG.debug(""go "" + sel + "" in "" + d.getName());
+            TargetManager.getInstance().setTarget(d);
+        }
+	TargetManager.getInstance().setTarget(sel);
+    }",3.2222222222222223
+sample_00260,"/**
+     * Tests this dataset for equality with an arbitrary object.
+     *
+     * @param obj  the object (<code>null</code> permitted).
+     *
+     * @return A boolean.
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (!(obj instanceof CategoryDataset)) {
+            return false;
+        }
+        CategoryDataset that = (CategoryDataset) obj;
+        if (!getRowKeys().equals(that.getRowKeys())) {
+            return false;
+        }
+        if (!getColumnKeys().equals(that.getColumnKeys())) {
+            return false;
+        }
+        int rowCount = getRowCount();
+        int colCount = getColumnCount();
+        for (int r = 0; r < rowCount; r++) {
+            for (int c = 0; c < colCount; c++) {
+                Number v1 = getValue(r, c);
+                Number v2 = that.getValue(r, c);
+                if (v1 == null) {
+                    if (v2 != null) {
+                        return false;
+                    }
+                }
+                else if (!v1.equals(v2)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }",4.222222222222222
+sample_00288,"@Test
+	public void testQueryCollectionOfValues() throws Exception {
+		Session s = openSession();
+		s.beginTransaction();
+		Baz baz = new Baz();
+		baz.setDefaults();
+		s.save(baz);
+		Glarch g = new Glarch();
+		Serializable gid = s.save(g);
+
+		if ( !(getDialect() instanceof MySQLDialect) && !(getDialect() instanceof HSQLDialect) /*&& !(dialect instanceof MckoiDialect)*/ && !(getDialect() instanceof SAPDBDialect) && !(getDialect() instanceof PointbaseDialect) && !(getDialect() instanceof TimesTenDialect) ) {
+			s.createFilter( baz.getFooArray(), ""where size(this.bytes) > 0"" ).list();
+			s.createFilter( baz.getFooArray(), ""where 0 in elements(this.bytes)"" ).list();
+		}
+		s.getTransaction().commit();
+		s.close();
+
+		s = openSession();
+		s.beginTransaction();
+		s.createQuery( ""from Baz baz join baz.fooSet foo join foo.foo.foo foo2 where foo2.string = 'foo'"" ).list();
+		s.createQuery( ""from Baz baz join baz.fooArray foo join foo.foo.foo foo2 where foo2.string = 'foo'"" ).list();
+		s.createQuery( ""from Baz baz join baz.stringDateMap date where index(date) = 'foo'"" ).list();
+		s.createQuery( ""from Baz baz join baz.topGlarchez g where index(g) = 'A'"" ).list();
+		s.createQuery( ""select index(g) from Baz baz join baz.topGlarchez g"" ).list();
+
+		assertTrue( s.createQuery( ""from Baz baz left join baz.stringSet"" ).list().size()==3 );
+		baz = (Baz) s.createQuery( ""from Baz baz join baz.stringSet str where str='foo'"" ).list().get(0);
+		assertTrue( !Hibernate.isInitialized( baz.getStringSet() ) );
+		baz = (Baz) s.createQuery( ""from Baz baz left join fetch baz.stringSet"" ).list().get(0);
+		assertTrue( Hibernate.isInitialized( baz.getStringSet() ) );
+		assertTrue( s.createQuery( ""from Baz baz join baz.stringSet string where string='foo'"" ).list().size()==1 );
+		assertTrue( s.createQuery( ""from Baz baz inner join baz.components comp where comp.name='foo'"" ).list().size()==1 );
+		//List bss = s.find(""select baz, ss from Baz baz inner join baz.stringSet ss"");
+		s.createQuery( ""from Glarch g inner join g.fooComponents comp where comp.fee is not null"" ).list();
+		s.createQuery( ""from Glarch g inner join g.fooComponents comp join comp.fee fee where fee.count > 0"" ).list();
+		s.createQuery( ""from Glarch g inner join g.fooComponents comp where comp.fee.count is not null"" ).list();
+
+		s.delete(baz);
+		s.delete( s.get(Glarch.class, gid) );
+		s.getTransaction().commit();
+		s.close();
+	}",2.888888888888889
+sample_00162,"  public synchronized void removeProgram(Program program) {
+    PluginTreeNode node = findProgramTreeNode(program, false);
+    if (node != null) {
+      mChildNodes.remove(node);
+      if (mMarker != null) {
+        program.unmark(mMarker);
+",3.0826446280991737
+sample_00358,"@Test
+	@SkipForDialects( {
+			@SkipForDialect( value = { HSQLDialect.class }, comment = ""The used join conditions does not work in HSQLDB. See HHH-4497."" ), 
+			@SkipForDialect( value = { SQLServer2005Dialect.class } ),
+			@SkipForDialect( value = { Oracle8iDialect.class }, comment = ""Oracle/DB2 do not support 'substring' function"" ),
+			@SkipForDialect( value = { DB2Dialect.class }, comment = ""Oracle/DB2 do not support 'substring' function"" ) } )
+	public void testManyToOneFromNonPkToNonPk() throws Exception {
+		// also tests usage of the stand-alone @JoinFormula annotation (i.e. not wrapped within @JoinColumnsOrFormulas)
+		Session s = openSession();
+		Transaction tx = s.beginTransaction();
+
+        Product kit = new Product();
+        kit.id = 1;
+        kit.productIdnf = ""KIT"";
+        kit.description = ""Kit"";
+        s.persist(kit);
+
+        Product kitkat = new Product();
+        kitkat.id = 2;
+        kitkat.productIdnf = ""KIT_KAT"";
+        kitkat.description = ""Chocolate"";
+        s.persist(kitkat);
+
+        s.flush();
+        s.clear();
+
+        kit = (Product) s.get(Product.class, 1);
+        kitkat = (Product) s.get(Product.class, 2);
+        System.out.println(kitkat.description);
+        assertNotNull(kitkat);
+        assertEquals(kit, kitkat.getProductFamily());
+        assertEquals(kit.productIdnf, kitkat.getProductFamily().productIdnf);
+        assertEquals(""KIT_KAT"", kitkat.productIdnf.trim());
+        assertEquals(""Chocolate"", kitkat.description.trim());
+
+        tx.rollback();
+		s.close();
+    }",3.7777777777777777
+sample_00138,"	/**
+	 * Do not use. Testing purposes only.
+	 */
+	public Result runMain(String... args) {
+		System.out.println(""JUnit version "" + Version.id());
+		List<Class<?>> classes= new ArrayList<Class<?>>();
+		List<Failure> missingClasses= new ArrayList<Failure>();
+",2.4710743801652892
+sample_00062,"/**
+ * Copyright (c) 2000-2012 Liferay, Inc. All rights reserved.
+ *
+ * This library is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU Lesser General Public License as published by the Free
+ * Software Foundation; either version 2.1 of the License, or (at your option)
+ * any later version.
+ *
+ * This library is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+ * details.
+ */
+
+package com.liferay.portal.kernel.messaging.proxy;
+
+import java.io.Serializable;
+
+/**
+ * @author Micha Kiener
+ * @author Michael C. Han
+ * @author Brian Wing Shun Chan
+ */
+public class ProxyResponse implements Serializable {
+
+	public Exception getException() {
+		return _exception;
+	}
+
+	public Object getResult() {
+		return _result;
+	}
+
+	public boolean hasError() {
+		if (_exception != null) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+
+	public void setException(Exception exception) {
+		_exception = exception;
+	}
+
+	public void setResult(Object result) {
+		_result = result;
+	}
+",4.021505376344086
+sample_00135,"
+        int stepSize = Math.min((option.getMaximumValue() - option.getMinimumValue()) / 10, 1000);
+        spinner = new JSpinner(new SpinnerNumberModel(option.getValue(), option.getMinimumValue(),
+                option.getMaximumValue(), Math.max(1, stepSize)));
+        spinner.setToolTipText(option.getShortDescription());
+",1.834710743801653
+sample_00128,"	public TestMethodRunner(Object test, Method method, RunNotifier notifier, Description description) {
+		super(test.getClass(), Before.class, After.class, test);
+		fTest= test;
+		fMethod= method;
+",2.8595041322314048
+sample_00008,"		else if (RUBY.getValue().equals(value)) {
+			return RUBY;
+		}
+
+		throw new IllegalArgumentException(""Invalid value "" + value);
+	}
+
+	public String getValue() {
+		return _value;
+	}
+",3.9923076923076923
+sample_00326,"/**
+	 * Delete an object
+	 */
+	public void delete(Serializable id, Object version, Object object, SessionImplementor session)
+			throws HibernateException {
+		final int span = getTableSpan();
+		boolean isImpliedOptimisticLocking = !entityMetamodel.isVersioned() && isAllOrDirtyOptLocking();
+		Object[] loadedState = null;
+		if ( isImpliedOptimisticLocking ) {
+			// need to treat this as if it where optimistic-lock=""all"" (dirty does *not* make sense);
+			// first we need to locate the ""loaded"" state
+			//
+			// Note, it potentially could be a proxy, so doAfterTransactionCompletion the location the safe way...
+			final EntityKey key = session.generateEntityKey( id, this );
+			Object entity = session.getPersistenceContext().getEntity( key );
+			if ( entity != null ) {
+				EntityEntry entry = session.getPersistenceContext().getEntry( entity );
+				loadedState = entry.getLoadedState();
+			}
+		}
+
+		final String[] deleteStrings;
+		if ( isImpliedOptimisticLocking && loadedState != null ) {
+			// we need to utilize dynamic delete statements
+			deleteStrings = generateSQLDeletStrings( loadedState );
+		}
+		else {
+			// otherwise, utilize the static delete statements
+			deleteStrings = getSQLDeleteStrings();
+		}
+
+		for ( int j = span - 1; j >= 0; j-- ) {
+			delete( id, version, j, object, deleteStrings[j], session, loadedState );
+		}
+
+	}",3.5555555555555554
+sample_00064,"		}
+	}
+
+	public void addBar_Rollback(java.lang.String text)
+		throws com.liferay.portal.kernel.exception.SystemException {
+		MethodHandler methodHandler = new MethodHandler(_addBar_RollbackMethodKey17,
+				ClpSerializer.translateInput(text));
+
+		try {
+			_classLoaderProxy.invoke(methodHandler);
+		}
+		catch (Throwable t) {
+			if (t instanceof com.liferay.portal.kernel.exception.SystemException) {
+				throw (com.liferay.portal.kernel.exception.SystemException)t;
+			}
+
+			if (t instanceof RuntimeException) {
+				throw (RuntimeException)t;
+			}
+			else {
+				throw new RuntimeException(t.getClass().getName() +
+					"" is not a valid exception"");
+			}
+		}
+	}
+
+	public com.liferay.testtransaction.model.Bar addBar_Success(
+		java.lang.String text)
+		throws com.liferay.portal.kernel.exception.SystemException {
+		Object returnObj = null;
+
+		MethodHandler methodHandler = new MethodHandler(_addBar_SuccessMethodKey18,
+				ClpSerializer.translateInput(text));
+
+		try {
+			returnObj = _classLoaderProxy.invoke(methodHandler);
+		}
+		catch (Throwable t) {
+			if (t instanceof com.liferay.portal.kernel.exception.SystemException) {
+				throw (com.liferay.portal.kernel.exception.SystemException)t;
+			}
+
+			if (t instanceof RuntimeException) {
+				throw (RuntimeException)t;
+			}
+			else {
+				throw new RuntimeException(t.getClass().getName() +
+					"" is not a valid exception"");
+			}
+		}
+",2.751322751322751
+sample_00300,"@SuppressWarnings( {""unchecked""})
+	@Test
+	public void testAnyMappingReference() {
+		Session s = openSession();
+		s.beginTransaction();
+
+		PropertyValue redValue = new StringPropertyValue( ""red"" );
+		PropertyValue loneliestNumberValue = new IntegerPropertyValue( 1 );
+
+		Long id;
+		PropertySet ps = new PropertySet( ""my properties"" );
+		ps.setSomeSpecificProperty( redValue );
+		ps.getGeneralProperties().put( ""the loneliest number"", loneliestNumberValue );
+		ps.getGeneralProperties().put( ""i like"", new StringPropertyValue( ""pina coladas"" ) );
+		ps.getGeneralProperties().put( ""i also like"", new StringPropertyValue( ""getting caught in the rain"" ) );
+		s.save( ps );
+
+		s.getTransaction().commit();
+		id = ps.getId();
+		s.clear();
+		s.beginTransaction();
+
+		// TODO : setEntity() currently will not work here, but that would be *very* nice
+		// does not work because the corresponding EntityType is then used as the ""bind type"" rather
+		// than the ""discovered"" AnyType...
+		s.createQuery( ""from PropertySet p where p.someSpecificProperty = :ssp"" ).setParameter( ""ssp"", redValue ).list();
+
+		s.createQuery( ""from PropertySet p where p.someSpecificProperty.id is not null"" ).list();
+
+		s.createQuery( ""from PropertySet p join p.generalProperties gp where gp.id is not null"" ).list();
+
+		s.delete( s.load( PropertySet.class, id ) );
+
+		s.getTransaction().commit();
+		s.close();
+	}",3.6666666666666665
+sample_00014,"		    	
+		    	String	temp = """";
+		    	
+		    	for (int i=0;i<library_path.length();i++){
+		    		
+		    		char	c = library_path.charAt(i);
+		    		
+		    		if ( c != '""' ){
+		    			
+		    			temp += c;
+		    			
+		    		}else{
+		    			
+		    			changed	= true;
+		    		}
+		    	}
+		    	
+		    	library_path	= temp;
+		    	
+		    		// remove trailing separator chars if they exist as they stuff up
+		    		// the following ""
+		    	
+		    	while( library_path.endsWith(File.separator)){
+		    	
+		    		changed = true;
+		    		
+		    		library_path = library_path.substring( 0, library_path.length()-1 );
+		    	}
+		    	
+		    	if ( changed ){
+",3.4110169491525424
+sample_00156,"			Class clas = object.getClass();
+			Field field = Reflect.resolveJavaField( 
+				clas, name, false/*onlyStatic*/ );
+			if ( field != null )
+				return new Variable( 
+					name, field.getType(), new LHS( object, field ) );
+",2.5454545454545454
+sample_00040,"	public long getClassPK();
+
+	/**
+	 * Sets the class p k of this expando row.
+	 *
+	 * @param classPK the class p k of this expando row
+	 */
+	public void setClassPK(long classPK);
+
+	public boolean isNew();
+",3.5319148936170213
+sample_00386,"@Test
+	public void testHistoryOfEdIng2() {
+		SetOwnedEntity ed1 = getEntityManager().find( SetOwnedEntity.class, ed1_id );
+		SetOwnedEntity ed2 = getEntityManager().find( SetOwnedEntity.class, ed2_id );
+
+		SetOwningEntity rev1 = getAuditReader().find( SetOwningEntity.class, ing2_id, 1 );
+		SetOwningEntity rev2 = getAuditReader().find( SetOwningEntity.class, ing2_id, 2 );
+		SetOwningEntity rev3 = getAuditReader().find( SetOwningEntity.class, ing2_id, 3 );
+		SetOwningEntity rev4 = getAuditReader().find( SetOwningEntity.class, ing2_id, 4 );
+		SetOwningEntity rev5 = getAuditReader().find( SetOwningEntity.class, ing2_id, 5 );
+
+		assert rev1.getReferences().equals( Collections.EMPTY_SET );
+		assert rev2.getReferences().equals( TestTools.makeSet( ed1, ed2 ) );
+		assert rev3.getReferences().equals( TestTools.makeSet( ed1, ed2 ) );
+		assert rev4.getReferences().equals( TestTools.makeSet( ed1, ed2 ) );
+		assert rev5.getReferences().equals( TestTools.makeSet( ed1, ed2 ) );
+	}",3.6666666666666665
+sample_00342,"public void mouseMoved(MouseEvent me) {
+	//- RedrawManager.lock();
+	translateMouseEvent(me);
+	Globals.curEditor(this);
+	setUnderMouse(me);
+        Fig currentFig = getCurrentFig();
+	if (currentFig != null && Globals.getShowFigTips()) {
+	    String tip = currentFig.getTipString(me);
+	    if (tip != null && (getJComponent() != null)) {
+	        JComponent c = getJComponent();
+	        if (c.getToolTipText() == null
+		    || !(c.getToolTipText().equals(tip))) {
+	            c.setToolTipText(tip);
+	        }
+            }
+	} else if (getJComponent() != null
+		   && getJComponent().getToolTipText() != null) {
+            getJComponent().setToolTipText(null); //was """"
+	}
+
+	_selectionManager.mouseMoved(me);
+	_modeManager.mouseMoved(me);
+	//- RedrawManager.unlock();
+	//- _redrawer.repairDamage();
+    }",3.2222222222222223
+sample_00216,"    /**
+     * Applies this action.
+     * 
+     * @param e The <code>ActionEvent</code>.
+     */
+    public void actionPerformed(ActionEvent e) {
+        final Game game = freeColClient.getGame();
+        final Map map = game.getMap();
+
+        Parameters p = showParametersDialog();
+",3.809917355371901
+sample_00279,"public void doTestWithTupleSubsetResultTransformerNullAliases(TupleSubsetResultTransformer transformer) throws Exception {
+		doTest( buildBasicKey( CacheableResultTransformer.create( transformer, null, new boolean[] { true } ) ) );
+		doTest( buildBasicKey( CacheableResultTransformer.create( transformer, null, new boolean[] { true, true } ) ) );
+		doTest( buildBasicKey( CacheableResultTransformer.create( transformer, null, new boolean[] { true, true, true } ) ) );
+		doTest( buildBasicKey( CacheableResultTransformer.create( transformer, null, new boolean[] { false, true } ) ) );
+		doTest( buildBasicKey( CacheableResultTransformer.create( transformer, null, new boolean[] { true, false } ) ) );
+		doTest( buildBasicKey( CacheableResultTransformer.create( transformer, null, new boolean[] { false, true, true } ) ) );
+		doTest( buildBasicKey( CacheableResultTransformer.create( transformer, null, new boolean[] {true, false, true } ) ) );
+		doTest( buildBasicKey( CacheableResultTransformer.create( transformer, null, new boolean[] {true, true, false } ) ) );
+		doTest( buildBasicKey( CacheableResultTransformer.create( transformer, null, new boolean[] {false, false, true } ) ) );
+		doTest( buildBasicKey( CacheableResultTransformer.create( transformer, null, new boolean[] {false, true, false } ) ) );
+		doTest( buildBasicKey( CacheableResultTransformer.create( transformer, null, new boolean[] {false, false, true } ) ) );
+	}",3.7777777777777777
+sample_00364,"private void compare(JoinWalker walker, LoadQueryDetails details) {
+		System.out.println( ""------ SQL -----------------------------------------------------------------"" );
+		System.out.println( ""WALKER    : "" + walker.getSQLString() );
+		System.out.println( ""LOAD-PLAN : "" + details.getSqlStatement() );
+		System.out.println( ""----------------------------------------------------------------------------"" );
+		System.out.println( );
+		System.out.println( ""------ SUFFIXES ------------------------------------------------------------"" );
+		System.out.println( ""WALKER    : "" + StringHelper.join( "", "",  walker.getSuffixes() ) + "" : ""
+									+ StringHelper.join( "", "", walker.getCollectionSuffixes() ) );
+		System.out.println( ""----------------------------------------------------------------------------"" );
+		System.out.println( );
+	}",4.888888888888889
+sample_00236,"private static Set<String> buildHintsSet() {
+		HashSet<String> hints = new HashSet<String>();
+		hints.add( HINT_TIMEOUT );
+		hints.add( SPEC_HINT_TIMEOUT );
+		hints.add( HINT_COMMENT );
+		hints.add( HINT_FETCH_SIZE );
+		hints.add( HINT_CACHE_REGION );
+		hints.add( HINT_CACHEABLE );
+		hints.add( HINT_READONLY );
+		hints.add( HINT_CACHE_MODE );
+		hints.add( HINT_FLUSH_MODE );
+		hints.add( HINT_NATIVE_LOCKMODE );
+		hints.add( HINT_FETCHGRAPH );
+		hints.add( HINT_LOADGRAPH );
+		return java.util.Collections.unmodifiableSet( hints );
+	}",4.444444444444445
+sample_00207,"    private static Date correctTimeZone(final Date date) {
+       Date ret=date;
+       if(java.util.TimeZone.getDefault().useDaylightTime()){
+            if(java.util.TimeZone.getDefault().inDaylightTime(date))
+                ret.setTime(date.getTime()+1*60*60*1000);
+        }
+        return ret;
+",2.87603305785124
+sample_00212,"    /**
+     * Get the List of all available Channels
+     * 
+     * @return All available Channels
+     */
+    public ElgatoChannel[] getAvailableChannels() {
+        ArrayList<ElgatoChannel> list = new ArrayList<ElgatoChannel>();
+
+        String res = null;
+        try {
+            res = mAppleScript.executeScript(CHANNELLIST);
+",3.3636363636363638
+sample_00295,"@Test
+	public void testSerializationFailsOnAfterStatementAggressiveReleaseWithOpenResources() throws Throwable {
+		prepare();
+		Session s = getSessionUnderTest();
+
+		Silly silly = new Silly( ""silly"" );
+		s.save( silly );
+
+		// this should cause the CM to obtain a connection, and then release it
+		s.flush();
+
+		// both scroll() and iterate() cause batching to hold on
+		// to resources, which should make aggressive-release not release
+		// the connection (and thus cause serialization to fail)
+		ScrollableResults sr = s.createQuery( ""from Silly"" ).scroll();
+
+		try {
+			SerializationHelper.serialize( s );
+			fail( ""Serialization allowed on connected session; or aggressive release released connection with open resources"" );
+		}
+		catch( IllegalStateException e ) {
+			// expected behavior
+		}
+
+		// getting the first row only because SybaseASE15Dialect throws NullPointerException
+		// if data is not read before closing the ResultSet
+		sr.next();
+
+		// Closing the ScrollableResults does currently force batching to
+		// aggressively release the connection
+		sr.close();
+		SerializationHelper.serialize( s );
+
+		s.delete( silly );
+		s.flush();
+
+		release( s );
+		done();
+	}",3.888888888888889
+sample_00384,"/**
+	 * Get the value mapped to this key, or null if no value is mapped to this key.
+	 *
+	 * @param key The cache key
+	 *
+	 * @return The cached data
+	 */
+	public final Object get(Object key) {
+		try {
+			final Element element = getCache().get( key );
+			if ( element == null ) {
+				return null;
+			}
+			else {
+				return element.getObjectValue();
+			}
+		}
+		catch (net.sf.ehcache.CacheException e) {
+			if ( e instanceof NonStopCacheException ) {
+				HibernateNonstopCacheExceptionHandler.getInstance()
+						.handleNonstopCacheException( (NonStopCacheException) e );
+				return null;
+			}
+			else {
+				throw new CacheException( e );
+			}
+		}
+	}",4.222222222222222
+sample_00251,"private static void parseFilter(Element filterElement, Filterable filterable, Mappings model) {
+		final String name = filterElement.attributeValue( ""name"" );
+		String condition = filterElement.getTextTrim();
+		if ( StringHelper.isEmpty(condition) ) {
+			condition = filterElement.attributeValue( ""condition"" );
+		}
+		//TODO: bad implementation, cos it depends upon ordering of mapping doc
+		//      fixing this requires that Collection/PersistentClass gain access
+		//      to the Mappings reference from Configuration (or the filterDefinitions
+		//      map directly) sometime during Configuration.build
+		//      (after all the types/filter-defs are known and before building
+		//      persisters).
+		if ( StringHelper.isEmpty(condition) ) {
+			condition = model.getFilterDefinition(name).getDefaultFilterCondition();
+		}
+		if ( condition==null) {
+			throw new MappingException(""no filter condition found for filter: "" + name);
+		}
+		Iterator aliasesIterator = filterElement.elementIterator(""aliases"");
+		java.util.Map<String, String> aliasTables = new HashMap<String, String>();
+		while (aliasesIterator.hasNext()){
+			Element alias = (Element) aliasesIterator.next();
+			aliasTables.put(alias.attributeValue(""alias""), alias.attributeValue(""table""));
+		}
+		LOG.debugf( ""Applying filter [%s] as [%s]"", name, condition );
+		String autoAliasInjectionText = filterElement.attributeValue(""autoAliasInjection"");
+		boolean autoAliasInjection = StringHelper.isEmpty(autoAliasInjectionText) ? true : Boolean.parseBoolean(autoAliasInjectionText);
+		filterable.addFilter(name, condition, autoAliasInjection, aliasTables, null);
+	}",3.2222222222222223
+sample_00411,"@Override
+	public void configure(Configuration cfg) {
+		super.configure( cfg );
+		cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, ""true"" );
+		cfg.setProperty( Environment.GENERATE_STATISTICS, ""true"" );
+		cfg.setProperty( Environment.USE_QUERY_CACHE, ""false"" );
+		cfg.setProperty( Environment.CACHE_REGION_FACTORY, getCacheRegionFactory().getName() );
+		cfg.setProperty( Environment.TRANSACTION_STRATEGY, getTransactionFactoryClass().getName() );
+		cfg.getProperties().put( AvailableSettings.JTA_PLATFORM, getJtaPlatform() );
+		cfg.setProperty( Environment.CONNECTION_PROVIDER, getConnectionProviderClass().getName() );
+	}",4.444444444444445
+sample_00398,"@Test
+    public void testExplicitPropertyAccessAnnotationsWithHibernateStyleOverride() throws Exception {
+        AnnotationConfiguration cfg = new AnnotationConfiguration();
+        Class<?> classUnderTest = Course3.class;
+        cfg.addAnnotatedClass( classUnderTest );
+        cfg.addAnnotatedClass( Student.class );
+        SessionFactoryImplementor factory = (SessionFactoryImplementor) cfg.buildSessionFactory( serviceRegistry );
+        EntityTuplizer tuplizer = factory.getEntityPersister( classUnderTest.getName() )
+                .getEntityMetamodel()
+                .getTuplizer();
+        assertTrue(
+                ""Field access should be used."",
+                tuplizer.getIdentifierGetter() instanceof DirectPropertyAccessor.DirectGetter
+        );
+
+        assertTrue(
+                ""Property access should be used."",
+                tuplizer.getGetter( 0 ) instanceof BasicPropertyAccessor.BasicGetter
+        );
+		factory.close();
+    }",3.2222222222222223
+sample_00303,"@Test
+	@SuppressWarnings( {""UnusedAssignment"", ""UnusedDeclaration""})
+	public void testSelectExpressions() {
+		createTestBaseData();
+		Session session = openSession();
+		Transaction txn = session.beginTransaction();
+		Human h = new Human();
+		h.setName( new Name( ""Gavin"", 'A', ""King"" ) );
+		h.setNickName(""Oney"");
+		h.setBodyWeight( 1.0f );
+		session.persist( h );
+		List results = session.createQuery(""select 'found', lower(h.name.first) from Human h where lower(h.name.first) = 'gavin'"").list();
+		results = session.createQuery(""select 'found', lower(h.name.first) from Human h where concat(h.name.first, ' ', h.name.initial, ' ', h.name.last) = 'Gavin A King'"").list();
+		results = session.createQuery(""select 'found', lower(h.name.first) from Human h where h.name.first||' '||h.name.initial||' '||h.name.last = 'Gavin A King'"").list();
+		results = session.createQuery(""select a.bodyWeight + m.bodyWeight from Animal a join a.mother m"").list();
+		results = session.createQuery(""select 2.0 * (a.bodyWeight + m.bodyWeight) from Animal a join a.mother m"").list();
+		results = session.createQuery(""select sum(a.bodyWeight + m.bodyWeight) from Animal a join a.mother m"").list();
+		results = session.createQuery(""select sum(a.mother.bodyWeight * 2.0) from Animal a"").list();
+		results = session.createQuery(""select concat(h.name.first, ' ', h.name.initial, ' ', h.name.last) from Human h"").list();
+		results = session.createQuery(""select h.name.first||' '||h.name.initial||' '||h.name.last from Human h"").list();
+		results = session.createQuery(""select nickName from Human"").list();
+		results = session.createQuery(""select lower(nickName) from Human"").list();
+		results = session.createQuery(""select abs(bodyWeight*-1) from Human"").list();
+		results = session.createQuery(""select upper(h.name.first||' ('||h.nickName||')') from Human h"").list();
+		results = session.createQuery(""select abs(a.bodyWeight-:param) from Animal a"").setParameter(""param"", new Float(2.0)).list();
+		results = session.createQuery(""select abs(:param - a.bodyWeight) from Animal a"").setParameter(""param"", new Float(2.0)).list();
+		results = session.createQuery(""select lower(upper('foo')) from Animal"").list();
+		results = session.createQuery(""select lower(upper('foo') || upper('bar')) from Animal"").list();
+		results = session.createQuery(""select sum(abs(bodyWeight - 1.0) * abs(length('ffobar')-3)) from Animal"").list();
+		session.delete(h);
+		txn.commit();
+		session.close();
+		destroyTestBaseData();
+	}",3.4444444444444446
+sample_00269,"private boolean saveGraphicsToFile(File theFile, CmdSaveGraphics cmd,
+            boolean overwrite) throws IOException {
+        if ( theFile.exists() && !overwrite ) {
+            int response =
+		JOptionPane.showConfirmDialog(ArgoFrame.getInstance(),
+                    Translator.messageFormat(""optionpane.confirm-overwrite"",
+                            new Object[] {theFile}),
+                    Translator.localize(""optionpane.confirm-overwrite-title""),
+                    JOptionPane.YES_NO_OPTION);
+            if (response == JOptionPane.NO_OPTION) return false;
+        }
+        FileOutputStream fo = null;
+        try {
+            fo = new FileOutputStream( theFile );
+            cmd.setStream(fo);
+            cmd.setScale(Configuration.getInteger(
+                    SaveGraphicsManager.KEY_GRAPHICS_RESOLUTION, 1));
+            cmd.doIt();
+        } finally {
+            if (fo != null) {
+                fo.close();
+            }
+        }
+        return true;
+    }",2.7777777777777777
+sample_00201,"	/**
+		subsequent imports override earlier ones
+	*/
+    public void	importPackage(String name)
+    {
+		if(importedPackages == null)
+			importedPackages = new Vector();
+
+		// If it exists, remove it and add it at the end (avoid memory leak)
+		if ( importedPackages.contains( name ) )
+			importedPackages.remove( name );
+
+		importedPackages.addElement(name);
+",3.9338842975206614
+sample_00161,"      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case EQ:
+        t = jj_consume_token(EQ);
+        break;
+      case NE:
+        t = jj_consume_token(NE);
+",2.4214876033057853
+sample_00043,"		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException;
+
+	public void deleteEntry(long entryId)
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public java.util.List<com.liferay.portlet.bookmarks.model.BookmarksEntry> getEntries(
+		long groupId, long folderId, int start, int end)
+		throws com.liferay.portal.kernel.exception.SystemException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public java.util.List<com.liferay.portlet.bookmarks.model.BookmarksEntry> getEntries(
+		long groupId, long folderId, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator orderByComparator)
+		throws com.liferay.portal.kernel.exception.SystemException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getEntriesCount(long groupId, long folderId)
+		throws com.liferay.portal.kernel.exception.SystemException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public com.liferay.portlet.bookmarks.model.BookmarksEntry getEntry(
+		long entryId)
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getFoldersEntriesCount(long groupId,
+		java.util.List<java.lang.Long> folderIds)
+		throws com.liferay.portal.kernel.exception.SystemException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public java.util.List<com.liferay.portlet.bookmarks.model.BookmarksEntry> getGroupEntries(
+		long groupId, int start, int end)
+		throws com.liferay.portal.kernel.exception.SystemException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public java.util.List<com.liferay.portlet.bookmarks.model.BookmarksEntry> getGroupEntries(
+		long groupId, long userId, int start, int end)
+		throws com.liferay.portal.kernel.exception.SystemException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getGroupEntriesCount(long groupId)
+		throws com.liferay.portal.kernel.exception.SystemException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getGroupEntriesCount(long groupId, long userId)
+		throws com.liferay.portal.kernel.exception.SystemException;
+",1.9914163090128756
+sample_00217,"    public ActionMenu getButtonAction() {
+        AbstractAction action = new AbstractAction() {
+
+            public void actionPerformed(ActionEvent evt) {
+                showDialog();
+            }
+        };
+        action.putValue(Action.NAME, mLocalizer.msg(""CapturePlugin"", ""Capture Plugin""));
+        action.putValue(Action.SMALL_ICON, createImageIcon(""mimetypes"", ""video-x-generic"", 16));
+",2.909090909090909
+sample_00190,"        @Override
+        public void mousePressed(MouseEvent e) {
+            if (f.getDesktopPane() == null || f.getDesktopPane().getDesktopManager() == null) {
+                return;
+            }
+            loc = SwingUtilities.convertPoint((Component) e.getSource(), e.getX(), e.getY(), null);
+            f.getDesktopPane().getDesktopManager().beginDraggingFrame(f);
+",2.4049586776859506
+sample_00309,"@Test
+	public void testExpressionWithParamInFunction() {
+		assertTranslation(""from Animal a where abs(a.bodyWeight-:param) < 2.0"");
+		assertTranslation(""from Animal a where abs(:param - a.bodyWeight) < 2.0"");
+		assertTranslation(""from Animal where abs(:x - :y) < 2.0"");
+		assertTranslation(""from Animal where lower(upper(:foo)) like 'f%'"");
+		if ( ! ( getDialect() instanceof SybaseDialect ) &&  ! ( getDialect() instanceof Sybase11Dialect ) &&  ! ( getDialect() instanceof SybaseASE15Dialect ) && ! ( getDialect() instanceof SQLServerDialect ) ) {
+			// Transact-SQL dialects (except SybaseAnywhereDialect) map the length function -> len; 
+			// classic translator does not consider that *when nested*;
+			// SybaseAnywhereDialect supports the length function
+
+			assertTranslation(""from Animal a where abs(abs(a.bodyWeight - 1.0 + :param) * abs(length('ffobar')-3)) = 3.0"");
+		}
+		if ( !( getDialect() instanceof MySQLDialect ) && ! ( getDialect() instanceof SybaseDialect ) && ! ( getDialect() instanceof Sybase11Dialect ) && !( getDialect() instanceof SybaseASE15Dialect ) && ! ( getDialect() instanceof SybaseAnywhereDialect ) && ! ( getDialect() instanceof SQLServerDialect ) ) {
+			assertTranslation(""from Animal where lower(upper('foo') || upper(:bar)) like 'f%'"");
+		}
+		if ( getDialect() instanceof PostgreSQLDialect || getDialect() instanceof PostgreSQL81Dialect ) {
+			return;
+		}
+		if ( getDialect() instanceof AbstractHANADialect ) {
+			// HANA returns
+			// ...al0_7_.mammal where [abs(cast(1 as float(19))-cast(? as float(19)))=1.0]
+			return;
+		}
+		assertTranslation(""from Animal where abs(cast(1 as float) - cast(:param as float)) = 1.0"");
+	}",2.888888888888889
+sample_00259,"/**
+     * Tests another object for equality with this object.
+     *
+     * @param obj  the object to test (<code>null</code> permitted).
+     *
+     * @return A boolean.
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (!(obj instanceof PinNeedle)) {
+            return false;
+        }
+        if (!super.equals(obj)) {
+            return false;
+        }
+        return true;
+    }",4.777777777777778
+sample_00105,"
+		String emailMessageAddedSubjectPrefix = getParameter(
+			actionRequest, ""emailMessageAddedSubjectPrefix"");
+		String emailMessageAddedBody = getParameter(
+			actionRequest, ""emailMessageAddedBody"");
+
+		if (Validator.isNull(emailMessageAddedSubjectPrefix)) {
+			SessionErrors.add(actionRequest, ""emailMessageAddedSubjectPrefix"");
+		}
+		else if (Validator.isNull(emailMessageAddedBody)) {
+			SessionErrors.add(actionRequest, ""emailMessageAddedBody"");
+		}
+	}
+
+	protected void validateEmailMessageUpdated(ActionRequest actionRequest)
+		throws Exception {
+
+		String emailMessageUpdatedSubjectPrefix = getParameter(
+			actionRequest, ""emailMessageUpdatedSubjectPrefix"");
+		String emailMessageUpdatedBody = getParameter(
+			actionRequest, ""emailMessageUpdatedBody"");
+
+		if (Validator.isNull(emailMessageUpdatedSubjectPrefix)) {
+			SessionErrors.add(
+				actionRequest, ""emailMessageUpdatedSubjectPrefix"");
+		}
+		else if (Validator.isNull(emailMessageUpdatedBody)) {
+			SessionErrors.add(actionRequest, ""emailMessageUpdatedBody"");
+		}
+	}
+",3.1666666666666665
+sample_00053,"	public String get(Object key) {
+		String value = null;
+
+		if (key != null) {
+			FacesContext facesContext = FacesContext.getCurrentInstance();
+
+			Locale locale = facesContext.getViewRoot().getLocale();
+
+			if (locale == null) {
+				locale = facesContext.getApplication().getDefaultLocale();
+			}
+
+			value = LanguageUtil.get(locale, key.toString());
+
+			if (_log.isDebugEnabled()) {
+				_log.debug(
+					""{locale="" + locale + "", key="" + key + "", value="" + value);
+			}
+		}
+
+		return value;
+	}
+
+	public boolean isEmpty() {
+		throw new UnsupportedOperationException();
+	}
+
+	public Set<String> keySet() {
+		throw new UnsupportedOperationException();
+	}
+",3.54320987654321
+sample_00001,"import com.liferay.portalweb.portal.util.RuntimeVariables;
+
+/**
+ * @author Brian Wing Shun Chan
+ */
+public class TearDownBlogsEntryCPTest extends BaseTestCase {
+	public void testTearDownBlogsEntryCP() throws Exception {
+		int label = 1;
+
+		while (label >= 1) {
+			switch (label) {
+			case 1:
+				selenium.open(""/web/guest/home/"");
+				loadRequiredJavaScriptModules();
+
+				for (int second = 0;; second++) {
+					if (second >= 90) {
+						fail(""timeout"");
+					}
+
+					try {
+						if (selenium.isElementPresent(""link=Control Panel"")) {
+							break;
+						}
+					}
+					catch (Exception e) {
+					}
+
+					Thread.sleep(1000);
+				}
+",3.234042553191489

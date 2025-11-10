@@ -1,0 +1,1405 @@
+id,code,readability
+sample_00049,"		return _dataType;
+	}
+
+	public int getPrecision()
+	{
+		return _precision;
+	}
+
+	public String getLiteralPrefix()
+	{
+		return _literalPrefix;
+	}
+
+	public String getLiteralSuffix()
+	{
+		return _literalSuffix;
+	}
+
+	public String getCreateParams()
+	{
+		return _createParams;
+	}
+
+    /**
+     * @see java.lang.Object#hashCode()
+     */
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = super.hashCode();
+        result = prime * result + (_autoIncrement ? 1231 : 1237);
+        return result;
+    }
+
+    /**
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (!super.equals(obj))
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        final DataTypeInfo other = (DataTypeInfo) obj;
+        if (!getSimpleName().equals(other.getSimpleName()))
+            return false;
+        return true;
+    }
+",3.606425702811245
+sample_00080,"		public LiferayDecorationsProvider(IRuntime adaptableObject) {
+			// runtime = adaptableObject;
+		}
+
+		public ImageDescriptor getIcon() {
+			return LiferayServerUIPlugin.imageDescriptorFromPlugin(
+				LiferayServerUIPlugin.PLUGIN_ID, ""icons/e16/server.png"" );
+		}
+
+	}
+",3.3518518518518516
+sample_00205,"    /**
+    * Adds a message to the list of messages that need to be displayed on the GUI.
+    * @param message The message to add.
+    */
+    public synchronized void addMessage(GUIMessage message) {
+        if (getMessageCount() == MESSAGE_COUNT) {
+            messages.remove(0);
+        }
+        messages.add(message);
+
+        freeColClient.getCanvas().repaint(0, 0, getWidth(), getHeight());
+",3.603305785123967
+sample_00034,"
+		long fileEntryTypeId = ParamUtil.getLong(
+			serviceContext, ""fileEntryTypeId"", -1L);
+		Map<String, Fields> fieldsMap = getFieldsMap(
+			serviceContext, fileEntryTypeId);
+
+		DLFileEntry dlFileEntry = dlFileEntryLocalService.updateFileEntry(
+			userId, fileEntryId, sourceFileName, mimeType, title, description,
+			changeLog, majorVersion, fileEntryTypeId, fieldsMap, null, is, size,
+			serviceContext);
+",2.8780487804878048
+sample_00263,"private void handleFireEvent(ArgoEvent event, ArgoEventListener listener) {
+        if (event.getEventType() == ArgoEventTypes.ANY_EVENT) {
+            if (listener instanceof ArgoModuleEventListener) {
+                handleFireModuleEvent((ArgoModuleEvent) event,
+				      (ArgoModuleEventListener) listener);
+            }
+            if (listener instanceof ArgoNotationEventListener) {
+                handleFireNotationEvent((ArgoNotationEvent) event,
+					(ArgoNotationEventListener) listener);
+            }
+        } else {
+            if (event.getEventType() >= ArgoEventTypes.ANY_MODULE_EVENT
+                && event.getEventType() < ArgoEventTypes.LAST_MODULE_EVENT) {
+                if (listener instanceof ArgoModuleEventListener) {
+                    handleFireModuleEvent((ArgoModuleEvent) event,
+					  (ArgoModuleEventListener) listener);
+                }
+            }
+            if (event.getEventType() >= ArgoEventTypes.ANY_NOTATION_EVENT
+                && event.getEventType() < ArgoEventTypes.LAST_NOTATION_EVENT) {
+                if (listener instanceof ArgoNotationEventListener) {
+                    handleFireNotationEvent((ArgoNotationEvent) event,
+					(ArgoNotationEventListener) listener);
+                }
+            }
+            if (event.getEventType() >= ArgoEventTypes.ANY_GENERATOR_EVENT
+                && event.getEventType() < ArgoEventTypes.LAST_GENERATOR_EVENT) {
+                if (listener instanceof ArgoGeneratorEventListener) {
+                    handleFireGeneratorEvent((ArgoGeneratorEvent) event,
+                            (ArgoGeneratorEventListener) listener);
+                }
+            }
+        }
+    }",2.888888888888889
+sample_00091,"				fail(""timeout"");
+			}
+
+			try {
+				if (selenium.isVisible(""//section"")) {
+					break;
+				}
+			}
+			catch (Exception e) {
+			}
+",3.44
+sample_00339,"public void vetoableChange(PropertyChangeEvent pce) {
+        if (""ownedElement"".equals(pce.getPropertyName())) {
+            Vector oldOwned = (Vector) pce.getOldValue();
+            Object eo = pce.getNewValue();
+            Object me = Model.getFacade().getModelElement(eo);
+            if (oldOwned.contains(eo)) {
+                LOG.debug(""model removed "" + me);
+                if (Model.getFacade().isANode(me)) {
+                    removeNode(me);
+                }
+                if (Model.getFacade().isANodeInstance(me)) {
+                    removeNode(me);
+                }
+                if (Model.getFacade().isAComponent(me)) {
+                    removeNode(me);
+                }
+                if (Model.getFacade().isAComponentInstance(me)) {
+                    removeNode(me);
+                }
+                if (Model.getFacade().isAClass(me)) {
+                    removeNode(me);
+                }
+                if (Model.getFacade().isAInterface(me)) {
+                    removeNode(me);
+                }
+                if (Model.getFacade().isAObject(me)) {
+                    removeNode(me);
+                }
+                if (Model.getFacade().isAAssociation(me)) {
+                    removeEdge(me);
+                }
+                if (Model.getFacade().isADependency(me)) {
+                    removeEdge(me);
+                }
+                if (Model.getFacade().isALink(me)) {
+                    removeEdge(me);
+                }
+            } else {
+                LOG.debug(""model added "" + me);
+            }
+        }
+    }",4.111111111111111
+sample_00052,"		throws PortalException, SystemException {
+
+		for (PollsQuestion question :
+				pollsQuestionPersistence.findByGroupId(groupId)) {
+
+			deleteQuestion(question);
+		}
+	}
+
+	public PollsQuestion getQuestion(long questionId)
+		throws PortalException, SystemException {
+
+		return pollsQuestionPersistence.findByPrimaryKey(questionId);
+	}
+
+	public List<PollsQuestion> getQuestions(long groupId)
+		throws SystemException {
+
+		return pollsQuestionPersistence.findByGroupId(groupId);
+	}
+
+	public List<PollsQuestion> getQuestions(long groupId, int start, int end)
+		throws SystemException {
+
+		return pollsQuestionPersistence.findByGroupId(groupId, start, end);
+	}
+
+	public int getQuestionsCount(long groupId) throws SystemException {
+		return pollsQuestionPersistence.countByGroupId(groupId);
+	}
+",3.3958333333333335
+sample_00345,"private Exception createTimeoutException(Thread thread) {
+        StackTraceElement[] stackTrace = thread.getStackTrace();
+        final Thread stuckThread = fLookForStuckThread ? getStuckThread(thread) : null;
+        Exception currThreadException = new Exception(String.format(
+                ""test timed out after %d %s"", fTimeout, fTimeUnit.name().toLowerCase()));
+        if (stackTrace != null) {
+            currThreadException.setStackTrace(stackTrace);
+            thread.interrupt();
+        }
+        if (stuckThread != null) {
+            Exception stuckThreadException = 
+                new Exception (""Appears to be stuck in thread "" +
+                               stuckThread.getName());
+            stuckThreadException.setStackTrace(getStackTrace(stuckThread));
+            return new MultipleFailureException    
+                (Arrays.<Throwable>asList(currThreadException, stuckThreadException));
+        } else {
+            return currThreadException;
+        }
+    }",2.888888888888889
+sample_00264,"/**
+     * Find an element in the list.
+     *
+     * This is a little more complex than the simple lookup since it might be
+     * that we are indexing with a class and the list contains interfaces.
+     *
+     * Since the hashtable lookup is a lot faster than the linear search we
+     * add the result of the linear search to the hashtable so that the next
+     * time we need not do it.
+     *
+     * @return Checklist or null if noone exist.
+     * @param cls the class to lookup.
+     */
+    private static Checklist lookupChecklist(Class cls) {
+        if (lists.contains(cls)) {
+            return (Checklist) lists.get(cls);
+	}
+
+        // Now lets search
+        Enumeration enumeration = lists.keys();
+
+        while (enumeration.hasMoreElements()) {
+            Object clazz = enumeration.nextElement();
+
+            Class[] intfs = cls.getInterfaces();
+            for (int i = 0; i < intfs.length; i++) {
+                if (intfs[i].equals(clazz)) {
+                    // We found it!
+                    Checklist chlist = (Checklist) lists.get(clazz);
+
+                    // Enter the class to speed up the next search.
+                    lists.put(cls, chlist);
+                    return chlist;
+                }
+            }
+        }
+
+        return null;
+    }",4.0
+sample_00241,"/**
+	 * Constructs a SybaseASE157Dialect
+	 */
+	public SybaseASE157Dialect() {
+		super();
+
+		registerFunction( ""create_locator"", new SQLFunctionTemplate( StandardBasicTypes.BINARY, ""create_locator(?1, ?2)"" ) );
+		registerFunction( ""locator_literal"", new SQLFunctionTemplate( StandardBasicTypes.BINARY, ""locator_literal(?1, ?2)"" ) );
+		registerFunction( ""locator_valid"", new SQLFunctionTemplate( StandardBasicTypes.BOOLEAN, ""locator_valid(?1)"" ) );
+		registerFunction( ""return_lob"", new SQLFunctionTemplate( StandardBasicTypes.BINARY, ""return_lob(?1, ?2)"" ) );
+		registerFunction( ""setdata"", new SQLFunctionTemplate( StandardBasicTypes.BOOLEAN, ""setdata(?1, ?2, ?3)"" ) );
+		registerFunction( ""charindex"", new SQLFunctionTemplate( StandardBasicTypes.INTEGER, ""charindex(?1, ?2, ?3)"" ) );
+	}",4.0
+sample_00013," */
+public class AddAddress1MyAccountTest extends BaseTestCase {
+	public void testAddAddress1MyAccount() throws Exception {
+		selenium.open(""/web/guest/home"");
+		loadRequiredJavaScriptModules();
+
+		for (int second = 0;; second++) {
+			if (second >= 90) {
+				fail(""timeout"");
+			}
+",3.459016393442623
+sample_00315,"private void releaseStatement(Session session, PreparedStatement ps) {
+		if ( ps != null ) {
+			try {
+				( (SessionImplementor) session ).getTransactionCoordinator().getJdbcCoordinator().release( ps );
+			}
+			catch ( Throwable ignore ) {
+				// ignore...
+			}
+		}
+	}",3.888888888888889
+sample_00088,"
+/**
+ * @author Peter Shin
+ * @author Brian Wing Shun Chan
+ */
+public class AdminActivityKeys {
+
+	public static final int ADD_KB_ARTICLE = 1;
+
+	public static final int ADD_KB_COMMENT = 5;
+",3.907608695652174
+sample_00273,"/**
+     * Verifies that listeners added with addFirstListener() while tests are run concurrently are
+     * notified about test failures.
+     */
+    @Test
+    public void reportConcurrentFailuresAfterAddFirstListener() throws Exception {
+        new AbstractConcurrentFailuresTest() {
+            @Override
+            protected void addListener(ExaminedListener listener) {
+                fNotifier.addFirstListener(listener);
+            }
+        }.test();
+    }",4.222222222222222
+sample_00166,"	/**
+		Get the top level namespace or this namespace if we are the top.
+		Note: this method should probably return type bsh.This to be consistent
+		with getThis();
+	*/
+    public This getGlobal( Interpreter declaringInterpreter )
+    {
+		if ( parent != null )
+			return parent.getGlobal( declaringInterpreter );
+		else
+			return getThis( declaringInterpreter );
+",3.760330578512397
+sample_00328,"public String[] toColumns(String alias, String propertyName) throws QueryException {
+		if ( propertyName.equals(CollectionPropertyNames.COLLECTION_ELEMENTS) ) {
+			return memberPersister.getElementColumnNames(alias);
+		}
+		else if ( propertyName.equals(CollectionPropertyNames.COLLECTION_INDICES) ) {
+			if ( !memberPersister.hasIndex() ) throw new QueryException(""unindexed collection in indices()"");
+			return memberPersister.getIndexColumnNames(alias);
+		}
+		else if ( propertyName.equals(CollectionPropertyNames.COLLECTION_SIZE) ) {
+			String[] cols = memberPersister.getKeyColumnNames();
+			return new String[] { ""count("" + alias + '.' + cols[0] + ')' };
+		}
+		else if ( propertyName.equals(CollectionPropertyNames.COLLECTION_MAX_INDEX) ) {
+			if ( !memberPersister.hasIndex() ) throw new QueryException(""unindexed collection in maxIndex()"");
+			String[] cols = memberPersister.getIndexColumnNames(alias);
+			if ( cols.length!=1 ) throw new QueryException(""composite collection index in maxIndex()"");
+			return new String[] { ""max("" + cols[0] + ')' };
+		}
+		else if ( propertyName.equals(CollectionPropertyNames.COLLECTION_MIN_INDEX) ) {
+			if ( !memberPersister.hasIndex() ) throw new QueryException(""unindexed collection in minIndex()"");
+			String[] cols = memberPersister.getIndexColumnNames(alias);
+			if ( cols.length!=1 ) throw new QueryException(""composite collection index in minIndex()"");
+			return new String[] { ""min("" + cols[0] + ')' };
+		}
+		else if ( propertyName.equals(CollectionPropertyNames.COLLECTION_MAX_ELEMENT) ) {
+			String[] cols = memberPersister.getElementColumnNames(alias);
+			if ( cols.length!=1 ) throw new QueryException(""composite collection element in maxElement()"");
+			return new String[] { ""max("" + cols[0] + ')' };
+		}
+		else if ( propertyName.equals(CollectionPropertyNames.COLLECTION_MIN_ELEMENT) ) {
+			String[] cols = memberPersister.getElementColumnNames(alias);
+			if ( cols.length!=1 ) throw new QueryException(""composite collection element in minElement()"");
+			return new String[] { ""min("" + cols[0] + ')' };
+		}
+		else {
+			//return memberPersister.toColumns(alias, propertyName);
+			throw new QueryException(""illegal syntax near collection: "" + propertyName);
+		}
+	}",3.3333333333333335
+sample_00414,"public static <T> JaxbRoot<T> unmarshallXml(String fileName, String schemaName, Class<T> clazz, ClassLoaderService classLoaderService)
+            throws JAXBException {
+        Schema schema = getMappingSchema( schemaName, classLoaderService );
+        InputStream in = classLoaderService.locateResourceStream( fileName );
+        JAXBContext jc = JAXBContext.newInstance( clazz );
+        Unmarshaller unmarshaller = jc.createUnmarshaller();
+        unmarshaller.setSchema( schema );
+        StreamSource stream = new StreamSource( in );
+        JAXBElement<T> elem = unmarshaller.unmarshal( stream, clazz );
+        Origin origin = new Origin( null, fileName );
+        return new JaxbRoot<T>( elem.getValue(), origin );
+    }",3.111111111111111
+sample_00134,"    Object removeName(String name) throws HsqlException {
+
+        Object owner = nameList.remove(name);
+
+        if (owner == null) {
+
+            // should contain name
+            throw Trace.error(Trace.GENERAL_ERROR);
+        }
+
+        return owner;
+",4.049586776859504
+sample_00306,"@Test public void testPathologicalKeywordAsIdentifier() throws Exception {
+		// Super evil badness... a legitimate keyword!
+		parse( ""from Order order"" );
+		//parse( ""from Order order join order.group"" );
+		parse( ""from X x order by x.group.by.from"" );
+		parse( ""from Order x order by x.order.group.by.from"" );
+		parse( ""select order.id from Order order"" );
+		parse( ""select order from Order order"" );
+		parse( ""from Order order where order.group.by.from is not null"" );
+		parse( ""from Order order order by order.group.by.from"" );
+		// Okay, now this is getting silly.
+		parse( ""from Group as group group by group.by.from"" );
+	}",4.0
+sample_00404,"@Override
+	protected void beforeTransactionCommit() {
+		transactionCoordinator().sendBeforeTransactionCompletionNotifications( this );
+
+		final boolean flush = ! transactionCoordinator().getTransactionContext().isFlushModeNever() &&
+				( isDriver || ! transactionCoordinator().getTransactionContext().isFlushBeforeCompletionEnabled() );
+
+		if ( flush ) {
+			// if an exception occurs during flush, user must call rollback()
+			transactionCoordinator().getTransactionContext().managedFlush();
+		}
+
+		if ( isDriver && isInitiator ) {
+			transactionCoordinator().getTransactionContext().beforeTransactionCompletion( this );
+		}
+
+		closeIfRequired();
+	}",4.222222222222222
+sample_00319,"@Test
+	public void testMultiSelectNewMapUsingAliasesWithFetchJoinList() throws Exception {
+		CriteriaExecutor criteriaExecutor = new CriteriaExecutor() {
+			protected Criteria getCriteria(Session s) {
+				return s.createCriteria( Student.class, ""s"" )
+						.createAlias( ""s.preferredCourse"", ""pc"", Criteria.LEFT_JOIN  )
+						.setFetchMode( ""enrolments"", FetchMode.JOIN )
+						.addOrder( Order.asc( ""s.studentNumber"" ))
+						.setResultTransformer( Transformers.ALIAS_TO_ENTITY_MAP );
+			}
+		};
+		HqlExecutor hqlSelectNewMapExecutor = new HqlExecutor() {
+			public Query getQuery(Session s) {
+				return s.createQuery( ""select new map(s as s, pc as pc) from Student s left join s.preferredCourse pc left join fetch s.enrolments order by s.studentNumber"" );
+			}
+		};
+		ResultChecker checker = new ResultChecker() {
+			public void check(Object results) {
+				List resultList = ( List ) results;
+				assertEquals( 2, resultList.size() );
+				Map yogiMap = ( Map ) resultList.get( 0 );
+				assertEquals( yogiExpected, yogiMap.get( ""s"" ) );
+				assertEquals( yogiExpected.getPreferredCourse(), yogiMap.get( ""pc"" ) );
+				Map shermanMap = ( Map ) resultList.get( 1 );
+				assertEquals( shermanExpected, shermanMap.get( ""s"" ) );
+				assertNull( shermanMap.get( ""pc"" ) );
+				if ( areDynamicNonLazyAssociationsChecked() ) {
+					assertTrue( Hibernate.isInitialized( ( ( Student ) yogiMap.get( ""s"" ) ).getEnrolments() ) );
+					assertEquals( yogiExpected.getEnrolments(), ( ( Student ) yogiMap.get( ""s"" ) ).getEnrolments() );
+					assertTrue( Hibernate.isInitialized( ( ( Student ) shermanMap.get( ""s"" ) ).getEnrolments() ) );
+					assertEquals( shermanExpected.getEnrolments(), ( ( ( Student ) shermanMap.get( ""s"" ) ).getEnrolments() ) );
+				}
+			}
+		};
+		runTest( hqlSelectNewMapExecutor, criteriaExecutor, checker, false );
+	}",3.2222222222222223
+sample_00243,"@Test
+	@TestForIssue(jiraKey = ""HHH-8007"")
+	public void testGetLimitStringSelectingMultipleColumnsFromSeveralTables() {
+		final String query = ""select t1.*, t2.* from tab1 t1, tab2 t2 where t1.ref = t2.ref order by t1.id desc"";
+
+		assertEquals(
+				""WITH query AS (SELECT inner_query.*, ROW_NUMBER() OVER (ORDER BY CURRENT_TIMESTAMP) as __hibernate_row_nr__ FROM ( "" +
+						""select TOP(?) t1.*, t2.* from tab1 t1, tab2 t2 where t1.ref = t2.ref order by t1.id desc ) inner_query ) "" +
+						""SELECT * FROM query WHERE __hibernate_row_nr__ >= ? AND __hibernate_row_nr__ < ?"",
+				dialect.buildLimitHandler( query, toRowSelection( 1, 3 ) ).getProcessedSql()
+		);
+	}",3.2222222222222223
+sample_00054,"		testSuite.addTestSuite(AddPortletMBTest.class);
+		testSuite.addTestSuite(AddMBCategoryTest.class);
+		testSuite.addTestSuite(AddMBMessage1Tag1Test.class);
+		testSuite.addTestSuite(AddMBMessage2Tag2Test.class);
+		testSuite.addTestSuite(AddMBMessage3Tag3Test.class);
+		testSuite.addTestSuite(AddMBMessageATagTest.class);
+		testSuite.addTestSuite(AddMBMessageBTagTest.class);
+		testSuite.addTestSuite(AddMBMessageCTagTest.class);
+		testSuite.addTestSuite(SearchTagsTest.class);
+		testSuite.addTestSuite(ViewTagsTest.class);
+",3.531496062992126
+sample_00363,"public LoadPlan buildLoadPlan(
+			SessionFactoryImplementor sf,
+			OuterJoinLoadable persister,
+			LoadQueryInfluencers influencers,
+			LockMode lockMode) {
+		FetchStyleLoadPlanBuildingAssociationVisitationStrategy strategy = new FetchStyleLoadPlanBuildingAssociationVisitationStrategy(
+				sf,
+				influencers,
+				lockMode
+				);
+		return MetamodelDrivenLoadPlanBuilder.buildRootEntityLoadPlan( strategy, persister );
+	}",3.3333333333333335
+sample_00050,"
+package org.gudy.azureus2.pluginsimpl.local.update;
+
+/**
+ * @author parg
+ *
+ */
+
+import java.io.*;
+
+import org.gudy.azureus2.platform.PlatformManager;
+import org.gudy.azureus2.platform.PlatformManagerCapabilities;
+import org.gudy.azureus2.platform.PlatformManagerFactory;
+import org.gudy.azureus2.plugins.update.*;
+
+import org.gudy.azureus2.core3.util.*;
+import org.gudy.azureus2.core3.internat.MessageText;
+import org.gudy.azureus2.core3.logging.*;
+
+import com.aelitis.azureus.core.update.AzureusRestarter;
+import com.aelitis.azureus.core.update.AzureusRestarterFactory;
+
+public class 
+UpdateInstallerImpl
+	implements UpdateInstaller
+{
+		// change these and you'll need to change the Updater!!!!
+	
+	protected static final String	UPDATE_DIR 	= ""updates"";
+	protected static final String	ACTIONS		= ""install.act"";
+	
+	protected static AEMonitor	class_mon 	= new AEMonitor( ""UpdateInstaller:class"" );
+
+	private UpdateManagerImpl	manager;
+	private File				install_dir;
+	
+	protected static void
+	checkForFailedInstalls(
+		UpdateManagerImpl	manager )
+	{
+		try{
+			File	update_dir = new File( manager.getUserDir() + File.separator + UPDATE_DIR );
+			
+			File[]	dirs = update_dir.listFiles();
+			
+			if ( dirs != null ){
+				
+				boolean	found_failure = false;
+				
+				String	files = """";
+",2.7991967871485945
+sample_00174,"
+            // ----------------------------------------------------------------
+            // required
+            // ----------------------------------------------------------------
+            addColumn(t, ""PROCEDURE_CAT"", Types.VARCHAR);
+            addColumn(t, ""PROCEDURE_SCHEM"", Types.VARCHAR);
+            addColumn(t, ""PROCEDURE_NAME"", Types.VARCHAR, false);    // not null
+",3.603305785123967
+sample_00189,"        t.checkColumnsMatch(tc.core.mainColArray, tc.core.refTable,
+                            tc.core.refColArray);
+        session.commit();
+
+        TableWorks tableWorks = new TableWorks(session, t);
+",2.925619834710744
+sample_00418,"public EntityKey interpretEntityKey(
+			SessionImplementor session,
+			String optionalEntityName,
+			Serializable optionalId,
+			Object optionalObject) {
+		if ( optionalEntityName != null ) {
+			final EntityPersister entityPersister;
+			if ( optionalObject != null ) {
+				entityPersister = session.getEntityPersister( optionalEntityName, optionalObject );
+			}
+			else {
+				entityPersister = session.getFactory().getEntityPersister( optionalEntityName );
+			}
+			if ( entityPersister.isInstance( optionalId ) &&
+					!entityPersister.getEntityMetamodel().getIdentifierProperty().isVirtual() &&
+					entityPersister.getEntityMetamodel().getIdentifierProperty().isEmbedded() ) {
+				// non-encapsulated composite identifier
+				final Serializable identifierState = ((CompositeType) entityPersister.getIdentifierType()).getPropertyValues(
+						optionalId,
+						session
+				);
+				return session.generateEntityKey( identifierState, entityPersister );
+			}
+			else {
+				return session.generateEntityKey( optionalId, entityPersister );
+			}
+		}
+		else {
+			return null;
+		}
+	}",3.0
+sample_00187,"  /**
+   * Add one zero if neccessary
+   * @param number
+   * @return
+   */
+  private CharSequence addZero(int number) {
+    StringBuilder builder = new StringBuilder();
+    
+    if (number < 10) {
+      builder.append('0');
+    }
+    
+    builder.append(Integer.toString(number));
+",4.016528925619835
+sample_00169,"    public void close() {
+
+        if (isClosed) {
+            return;
+        }
+
+        isClosed = true;
+
+        try {
+            resultOut.setResultType(ResultConstants.SQLDISCONNECT);
+",4.049586776859504
+sample_00058,"
+import com.liferay.portal.kernel.cal.DayAndPosition;
+import com.liferay.portal.kernel.cal.Duration;
+import com.liferay.portal.kernel.cal.Recurrence;
+
+import java.util.Calendar;
+
+/**
+ * @author Douglas Wong
+ */
+public class RecurrenceMonthlyByDayTest extends RecurrenceTestCase {
+
+	public void testRecurrence() {
+		Recurrence recurrence = getRecurrence(
+			dtStart, durationOneHour, FRIDAY, 3, 1);
+
+		Calendar beforeRecurrence = getCalendar(2008, FEBRUARY, 15, 22, 9);
+
+		assertRecurrenceEquals(false, recurrence, beforeRecurrence);
+
+		Calendar duringRecurrence1 = getCalendar(2008, FEBRUARY, 15, 22, 10);
+		Calendar duringRecurrence2 = getCalendar(2008, MARCH, 21, 22, 15);
+
+		assertRecurrenceEquals(true, recurrence, duringRecurrence1);
+		assertRecurrenceEquals(true, recurrence, duringRecurrence2);
+
+		Calendar afterRecurrence = getCalendar(2008, FEBRUARY, 15, 23, 10);
+
+		assertRecurrenceEquals(false, recurrence, afterRecurrence);
+	}
+",3.686991869918699
+sample_00048,"				selenium.clickAt(""link=Search All Users"",
+					RuntimeVariables.replace(""Search All Users""));
+				selenium.waitForPageToLoad(""30000"");
+				loadRequiredJavaScriptModules();
+
+				boolean advancedVisible = selenium.isVisible(
+						""link=Advanced \u00bb"");
+
+				if (!advancedVisible) {
+					label = 3;
+",3.1012145748987856
+sample_00344,"@Test
+    public void listenersAreCalledCorrectlyInTheFaceOfFailures()
+            throws Exception {
+        JUnitCore core = new JUnitCore();
+        final List<Failure> failures = new ArrayList<Failure>();
+        core.addListener(new RunListener() {
+            @Override
+            public void testRunFinished(Result result) throws Exception {
+                failures.addAll(result.getFailures());
+            }
+        });
+        fMax.run(Request.aClass(TwoTests.class), core);
+        assertEquals(1, failures.size());
+    }",3.2222222222222223
+sample_00235,"String[] parseOptions(String[] args) {
+        for (int i = 0; i != args.length; ++i) {
+            String arg = args[i];
+
+            try {
+                if (arg.equals(""--"")) {
+                    return copyArray(args, i + 1, args.length);
+                } else if (arg.startsWith(""--"")) {
+                    if (arg.startsWith(""--filter="") || arg.equals(""--filter"")) {
+                        String filterSpec;
+                        if (arg.equals(""--filter"")) {
+                            ++i;
+
+                            if (i < args.length) {
+                                filterSpec = args[i];
+                            } else {
+                                parserErrors.add(new CommandLineParserError(arg + "" value not specified""));
+
+                                break;
+                            }
+                        } else {
+                            filterSpec = arg.substring(arg.indexOf('=') + 1);
+                        }
+
+                        filter = filter.intersect(FilterFactories.createFilterFromFilterSpec(
+                                createSuiteDescription(arg), filterSpec));
+                    } else {
+                        parserErrors.add(new CommandLineParserError(""JUnit knows nothing about the "" + arg + "" option""));
+                    }
+                } else {
+                    return copyArray(args, i, args.length);
+                }
+            } catch (FilterFactory.FilterNotCreatedException e) {
+                parserErrors.add(e);
+            }
+        }
+
+        return new String[]{};
+    }",2.6666666666666665
+sample_00252,"/**
+     * Retrieves a PropertyAccessor instance based on the given property definition and
+     * entity mode.
+     *
+     * @param property The property for which to retrieve an accessor.
+     * @param mode The mode for the resulting entity.
+     * @return An appropriate accessor.
+     * @throws MappingException
+     */
+	public static PropertyAccessor getPropertyAccessor(AttributeBinding property, EntityMode mode) throws MappingException {
+		//TODO: this is temporary in that the end result will probably not take a Property reference per-se.
+	    if ( null == mode || EntityMode.POJO.equals( mode ) ) {
+		    return getPojoPropertyAccessor( property.getPropertyAccessorName() );
+	    }
+	    else if ( EntityMode.MAP.equals( mode ) ) {
+		    return getDynamicMapPropertyAccessor();
+	    }
+	    else {
+		    throw new MappingException( ""Unknown entity mode ["" + mode + ""]"" );
+	    }
+	}",4.333333333333333
+sample_00021,"package org.bouncycastle.jce;
+
+import java.util.Enumeration;
+
+import org.bouncycastle.asn1.x9.X962NamedCurves;
+import org.bouncycastle.asn1.x9.X9ECParameters;
+import org.bouncycastle.jce.spec.ECNamedCurveParameterSpec;
+
+/**
+ * a table of locally supported named curves.
+ */
+public class ECNamedCurveTable
+{
+    /**
+     * return a parameter spec representing the passed in named
+     * curve. The routine returns null if the curve is not present.
+     * 
+     * @param name the name of the curve requested
+     * @return a parameter spec for the curve, null if it is not available.
+     */
+    public static ECNamedCurveParameterSpec getParameterSpec(
+        String  name)
+    {
+        X9ECParameters  ecP = X962NamedCurves.getByName(name);
+        if (ecP == null)
+        {
+            return null;
+        }
+
+        return new ECNamedCurveParameterSpec(
+                                        name,
+                                        ecP.getCurve(),
+                                        ecP.getG(),
+                                        ecP.getN(),
+                                        ecP.getH(),
+                                        ecP.getSeed());
+
+    }
+
+    /**
+     * return an enumeration of the names of the available curves.
+     *
+     * @return an enumeration of the names of the available curves.
+     */
+    public static Enumeration getNames()
+    {
+        return X962NamedCurves.getNames();
+    }
+",3.935483870967742
+sample_00313,"@Test
+	@SkipForDialect(
+			value = { MySQLMyISAMDialect.class, AbstractHANADialect.class },
+			comment = ""MySQL (MyISAM) / Hana do not support FK violation checking""
+	)
+	public void testIntegrityViolation() throws Exception {
+		final Session session = openSession();
+		session.beginTransaction();
+
+		session.doWork(
+				new Work() {
+					@Override
+					public void execute(Connection connection) throws SQLException {
+						// Attempt to insert some bad values into the T_MEMBERSHIP table that should
+						// result in a constraint violation
+						PreparedStatement ps = null;
+						try {
+							ps = ((SessionImplementor)session).getTransactionCoordinator().getJdbcCoordinator().getStatementPreparer().prepareStatement( ""INSERT INTO T_MEMBERSHIP (user_id, group_id) VALUES (?, ?)"" );
+							ps.setLong(1, 52134241);    // Non-existent user_id
+							ps.setLong(2, 5342);        // Non-existent group_id
+							((SessionImplementor)session).getTransactionCoordinator().getJdbcCoordinator().getResultSetReturn().executeUpdate( ps );
+
+							fail(""INSERT should have failed"");
+						}
+						catch (ConstraintViolationException ignore) {
+							// expected outcome
+						}
+						finally {
+							releaseStatement( session, ps );
+						}
+					}
+				}
+		);
+
+		session.getTransaction().rollback();
+		session.close();
+	}",3.6666666666666665
+sample_00160,"    /**
+     * Handles an ""deliverGift""-request.
+     * 
+     * @param element The element (root element in a DOM-parsed XML tree) that
+     *            holds all the information.
+     */
+    private Element deliverGift(Element element) {
+        Element unitElement = Message.getChildElement(element, Unit.getXMLElementTagName());
+
+        Unit unit = (Unit) getGame().getFreeColGameObject(unitElement.getAttribute(""ID""));
+        unit.readFromXMLElement(unitElement);
+",2.909090909090909
+sample_00276,"@Test
+	public void testBasicHiLoOptimizerUsage() {
+		int increment = 10;
+		Long next;
+
+		// test historic sequence behavior, where the initial values start at 1...
+		SourceMock sequence = new SourceMock( 1 );
+		Optimizer optimizer = buildHiloOptimizer( -1, increment );
+		for ( int i = 1; i <= increment; i++ ) {
+			next = ( Long ) optimizer.generate( sequence );
+			assertEquals( i, next.intValue() );
+		}
+		assertEquals( 1, sequence.getTimesCalled() ); // once to initialze state
+		assertEquals( 1, sequence.getCurrentValue() );
+		// force a ""clock over""
+		next = ( Long ) optimizer.generate( sequence );
+		assertEquals( 11, next.intValue() );
+		assertEquals( 2, sequence.getTimesCalled() );
+		assertEquals( 2, sequence.getCurrentValue() );
+
+		// test historic table behavior, where the initial values started at 0 (we now force 1 to be the first used id value)
+		sequence = new SourceMock( 0 );
+		optimizer = buildHiloOptimizer( -1, increment );
+		for ( int i = 1; i <= increment; i++ ) {
+			next = ( Long ) optimizer.generate( sequence );
+			assertEquals( i, next.intValue() );
+		}
+		assertEquals( 2, sequence.getTimesCalled() ); // here have have an extra call to get to 1 initially
+		assertEquals( 1, sequence.getCurrentValue() );
+		// force a ""clock over""
+		next = ( Long ) optimizer.generate( sequence );
+		assertEquals( 11, next.intValue() );
+		assertEquals( 3, sequence.getTimesCalled() );
+		assertEquals( 2, sequence.getCurrentValue() );
+	}",3.3333333333333335
+sample_00191,"	/**
+		Translate bsh.Modifiers into ASM modifier bitflags.
+	*/
+	static int getASMModifiers( Modifiers modifiers ) 
+	{
+		int mods = 0;
+		if ( modifiers == null )
+			return mods;
+
+		if ( modifiers.hasModifier(""public"") )
+			mods += ACC_PUBLIC;
+",3.6942148760330578
+sample_00385,"@Test
+	public void testModFlagProperties() {
+		assertEquals(
+				TestTools.makeSet( ""comp1_MOD"" ),
+				TestTools.extractModProperties(
+						getCfg().getClassMapping(
+								""org.hibernate.envers.test.entities.components.ComponentTestEntity_AUD""
+						)
+				)
+		);
+	}",4.333333333333333
+sample_00293,"@Override
+    public void runTest(final Test test, final TestResult result) {
+        Thread t = new Thread() {
+            @Override
+            public void run() {
+                try {
+                    // inlined due to limitation in VA/Java
+                    //ActiveTestSuite.super.runTest(test, result);
+                    test.run(result);
+                } finally {
+                    ActiveTestSuite.this.runFinished();
+                }
+            }
+        };
+        t.start();
+    }
+",4.555555555555555
+sample_00343,"public Set getDependencies(Object parent) {
+        if (Model.getFacade().isAClass(parent)) {
+	    Set set = new HashSet();
+	    set.add(parent);
+	    set.addAll(Model.getFacade().getAttributes(parent));
+	    set.addAll(Model.getFacade().getOperations(parent));
+	    set.addAll(Model.getFacade().getAssociationEnds(parent));
+	    set.addAll(Model.getFacade().getSupplierDependencies(parent));
+	    set.addAll(Model.getFacade().getClientDependencies(parent));
+	    set.addAll(Model.getFacade().getGeneralizations(parent));
+	    set.addAll(Model.getFacade().getSpecializations(parent));
+	    return set;
+	}
+
+	return null;
+    }",4.666666666666667
+sample_00257,"public int getSqlTypeCode(Mapping mapping) throws MappingException {
+        org.hibernate.type.Type type = getValue().getType();
+        try {
+            int sqlTypeCode = type.sqlTypes( mapping )[getTypeIndex()];
+            if ( getSqlTypeCode() != null && getSqlTypeCode() != sqlTypeCode ) {
+                throw new MappingException( ""SQLType code's does not match. mapped as "" + sqlTypeCode + "" but is "" + getSqlTypeCode() );
+            }
+            return sqlTypeCode;
+        }
+        catch ( Exception e ) {
+            throw new MappingException(
+                    ""Could not determine type for column "" +
+                            name +
+                            "" of type "" +
+                            type.getClass().getName() +
+                            "": "" +
+                            e.getClass().getName(),
+                    e
+            );
+        }
+    }",3.7777777777777777
+sample_00308,"@Test
+	public void testDateTimeArithmeticReturnTypesAndParameterGuessing() {
+		QueryTranslatorImpl translator = createNewQueryTranslator( ""select o.orderDate - o.orderDate from Order o"" );
+		assertEquals( ""incorrect return type count"", 1, translator.getReturnTypes().length );
+		assertEquals( ""incorrect return type"", DoubleType.INSTANCE, translator.getReturnTypes()[0] );
+		translator = createNewQueryTranslator( ""select o.orderDate + 2 from Order o"" );
+		assertEquals( ""incorrect return type count"", 1, translator.getReturnTypes().length );
+		assertEquals( ""incorrect return type"", CalendarDateType.INSTANCE, translator.getReturnTypes()[0] );
+		translator = createNewQueryTranslator( ""select o.orderDate -2 from Order o"" );
+		assertEquals( ""incorrect return type count"", 1, translator.getReturnTypes().length );
+		assertEquals( ""incorrect return type"", CalendarDateType.INSTANCE, translator.getReturnTypes()[0] );
+
+		translator = createNewQueryTranslator( ""from Order o where o.orderDate > ?"" );
+		assertEquals( ""incorrect expected param type"", CalendarDateType.INSTANCE, translator.getParameterTranslations().getOrdinalParameterExpectedType( 1 ) );
+
+		translator = createNewQueryTranslator( ""select o.orderDate + ? from Order o"" );
+		assertEquals( ""incorrect return type count"", 1, translator.getReturnTypes().length );
+		assertEquals( ""incorrect return type"", CalendarDateType.INSTANCE, translator.getReturnTypes()[0] );
+		assertEquals( ""incorrect expected param type"", DoubleType.INSTANCE, translator.getParameterTranslations().getOrdinalParameterExpectedType( 1 ) );
+
+	}",3.6666666666666665
+sample_00149,"        boolean    hasReturnValue;
+
+        outlen = parameters.length;
+        offset = 0;
+",3.9421487603305785
+sample_00130,"    private void moveUnit(KeyEvent e) {
+        if (!parent.isMapboardActionsEnabled()) {
+            return;
+        }
+        
+        switch (e.getKeyCode()) {
+        case KeyEvent.VK_ESCAPE:
+            // main menu
+            break;
+        case KeyEvent.VK_NUMPAD1:
+        case KeyEvent.VK_END:
+            inGameController.moveActiveUnit(Map.SW);
+",3.347107438016529
+sample_00151,"			
+			if (iterateOverMe instanceof String)
+				return createEnumeration(((String)iterateOverMe).toCharArray());
+			
+			if (iterateOverMe instanceof StringBuffer)
+				return createEnumeration(
+					iterateOverMe.toString().toCharArray());
+
+			throw new IllegalArgumentException(
+				""Cannot enumerate object of type ""+iterateOverMe.getClass());
+",3.2644628099173554
+sample_00359,"public CollectionListeners( SessionFactory sf) {
+		preCollectionRecreateListener = new PreCollectionRecreateListener( this );
+		initializeCollectionListener = new InitializeCollectionListener( this );
+		preCollectionRemoveListener = new PreCollectionRemoveListener( this );
+		preCollectionUpdateListener = new PreCollectionUpdateListener( this );
+		postCollectionRecreateListener = new PostCollectionRecreateListener( this );
+		postCollectionRemoveListener = new PostCollectionRemoveListener( this );
+		postCollectionUpdateListener = new PostCollectionUpdateListener( this );
+
+		EventListenerRegistry registry = ( (SessionFactoryImplementor) sf ).getServiceRegistry().getService( EventListenerRegistry.class );
+		registry.setListeners( EventType.INIT_COLLECTION, initializeCollectionListener );
+
+		registry.setListeners( EventType.PRE_COLLECTION_RECREATE, preCollectionRecreateListener );
+		registry.setListeners( EventType.POST_COLLECTION_RECREATE, postCollectionRecreateListener );
+
+		registry.setListeners( EventType.PRE_COLLECTION_REMOVE, preCollectionRemoveListener );
+		registry.setListeners( EventType.POST_COLLECTION_REMOVE, postCollectionRemoveListener );
+
+		registry.setListeners( EventType.PRE_COLLECTION_UPDATE, preCollectionUpdateListener );
+		registry.setListeners( EventType.POST_COLLECTION_UPDATE, postCollectionUpdateListener );
+	}",4.111111111111111
+sample_00099,"/*
+ * Copyright (C) 2007 Rob Manning
+ * manningr@users.sourceforge.net
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+package net.sourceforge.squirrel_sql.plugins.dbdiff;
+
+import net.sourceforge.squirrel_sql.client.session.ISession;
+import net.sourceforge.squirrel_sql.fw.sql.IDatabaseObjectInfo;
+
+/**
+ * This is implemented in order to pass needed info along to diff executor.
+ */
+public interface SessionInfoProvider
+{
+
+	public void setSourceSession(ISession session);
+
+	public ISession getSourceSession();
+
+	public IDatabaseObjectInfo[] getSourceSelectedDatabaseObjects();
+
+	public IDatabaseObjectInfo[] getDestSelectedDatabaseObjects();
+
+	public void setDestSelectedDatabaseObjects(IDatabaseObjectInfo[] infos);
+
+	public void setSourceSelectedDatabaseObjects(IDatabaseObjectInfo[] infos);
+
+	public void setDestSession(ISession session);
+
+	public ISession getDestSession();
+
+	/**
+	 * @return the scriptFileManager
+	 */
+	public IScriptFileManager getScriptFileManager();
+",3.735
+sample_00372,"@Override
+	public final String getElementText() throws XMLStreamException {
+		XMLEvent event = this.previousEvent;
+		if (event == null) {
+			throw new XMLStreamException(""Must be on START_ELEMENT to read next text, element was null"");
+		}
+		if (!event.isStartElement()) {
+			throw new XMLStreamException(""Must be on START_ELEMENT to read next text"", event.getLocation());
+		}
+
+		final StringBuilder text = new StringBuilder();
+		while (!event.isEndDocument()) {
+			switch (event.getEventType()) {
+				case XMLStreamConstants.CHARACTERS:
+				case XMLStreamConstants.SPACE:
+				case XMLStreamConstants.CDATA: {
+					final Characters characters = event.asCharacters();
+					text.append(characters.getData());
+					break;
+				}
+				case XMLStreamConstants.ENTITY_REFERENCE: {
+					final EntityReference entityReference = (EntityReference)event;
+					final EntityDeclaration declaration = entityReference.getDeclaration();
+					text.append(declaration.getReplacementText());
+					break;
+				}
+				case XMLStreamConstants.COMMENT:
+				case XMLStreamConstants.PROCESSING_INSTRUCTION: {
+					//Ignore
+					break;
+				}
+				default: {
+					throw new XMLStreamException(""Unexpected event type '"" + XMLStreamConstantsUtils.getEventName(event.getEventType()) + ""' encountered. Found event: "" + event, event.getLocation());
+				}
+			}
+
+			event = this.nextEvent();
+		}
+
+		return text.toString();
+	}",4.111111111111111
+sample_00087,"
+    private com.sap.engine.services.dc.wsgate.Option[] options;
+
+    public Deploy() {
+    }
+
+    public Deploy(
+           com.sap.engine.services.dc.wsgate.ArchiveFile[] archiveFiles,
+           com.sap.engine.services.dc.wsgate.Option[] options) {
+           this.archiveFiles = archiveFiles;
+           this.options = options;
+    }
+
+
+    /**
+     * Gets the archiveFiles value for this Deploy.
+     * 
+     * @return archiveFiles
+     */
+    public com.sap.engine.services.dc.wsgate.ArchiveFile[] getArchiveFiles() {
+        return archiveFiles;
+    }
+
+
+    /**
+     * Sets the archiveFiles value for this Deploy.
+     * 
+     * @param archiveFiles
+     */
+    public void setArchiveFiles(com.sap.engine.services.dc.wsgate.ArchiveFile[] archiveFiles) {
+        this.archiveFiles = archiveFiles;
+    }
+
+    public com.sap.engine.services.dc.wsgate.ArchiveFile getArchiveFiles(int i) {
+        return this.archiveFiles[i];
+    }
+
+    public void setArchiveFiles(int i, com.sap.engine.services.dc.wsgate.ArchiveFile _value) {
+        this.archiveFiles[i] = _value;
+    }
+
+
+    /**
+     * Gets the options value for this Deploy.
+     * 
+     * @return options
+     */
+    public com.sap.engine.services.dc.wsgate.Option[] getOptions() {
+        return options;
+    }
+",3.337278106508876
+sample_00330,"/**
+	 * Perform {@link org.hibernate.action.spi.Executable#execute()} on each element of the list
+	 * 
+	 * @param list The list of Executable elements to be performed
+	 *
+	 * @throws HibernateException
+	 */
+	private <E extends Executable & Comparable<?> & Serializable> void executeActions(ExecutableList<E> list) throws HibernateException {
+		// todo : consider ways to improve the double iteration of Executables here:
+		//		1) we explicitly iterate list here to perform Executable#execute()
+		//		2) ExecutableList#getQuerySpaces also iterates the Executables to collect query spaces.
+		try {
+			for ( E e : list ) {
+				try {
+					e.execute();
+				}
+				finally {
+					beforeTransactionProcesses.register( e.getBeforeTransactionCompletionProcess() );
+					afterTransactionProcesses.register( e.getAfterTransactionCompletionProcess() );
+				}
+			}
+		}
+		finally {
+			if ( session.getFactory().getSettings().isQueryCacheEnabled() ) {
+				// Strictly speaking, only a subset of the list may have been processed if a RuntimeException occurs.
+				// We still invalidate all spaces. I don't see this as a big deal - after all, RuntimeExceptions are
+				// unexpected.
+				Set<Serializable> propertySpaces = list.getQuerySpaces();
+				invalidateSpaces( propertySpaces.toArray( new Serializable[propertySpaces.size()] ) );
+			}
+		}
+
+		list.clear();
+		session.getTransactionCoordinator().getJdbcCoordinator().executeBatch();
+	}",3.5555555555555554
+sample_00214,"
+        Node r = x.getRight();
+
+        if (r != null) {
+            x = r;
+
+            Node l = x.getLeft();
+",4.074380165289257
+sample_00121,"
+			Object ret = body.eval(callstack, interpreter);
+
+			boolean breakout = false;
+			if(ret instanceof ReturnControl)
+			{
+				switch(((ReturnControl)ret).kind )
+				{
+					case RETURN:
+						return ret;
+",2.9917355371900825
+sample_00420,"@After
+	public void cleanup() {
+		b.setC( null );
+		b.setD( null );
+		b.getGCollection().remove( g );
+
+		c.getBCollection().remove( b );
+		c.getDCollection().remove( d );
+
+		d.getBCollection().remove( b );
+		d.setC( null );
+		d.setE( null );
+		d.getFCollection().remove( f );
+
+		e.getDCollection().remove( d );
+		e.setF( null );
+
+		f.setD( null );
+		f.getECollection().remove( e );
+		f.setG( null );
+
+		g.setB( null );
+		g.getFCollection().remove( f );
+
+		Session s = openSession();
+		s.getTransaction().begin();
+		b = ( B ) s.merge( b );
+		c = ( C ) s.merge( c );
+		d = ( D ) s.merge( d );
+		e = ( E ) s.merge( e );
+		f = ( F ) s.merge( f );
+		g = ( G ) s.merge( g );
+		s.delete( f );
+		s.delete( g );
+		s.delete( b );
+		s.delete( d );
+		s.delete( e );
+		s.delete( c );
+		s.getTransaction().commit();
+		s.close();
+	}",3.2222222222222223
+sample_00020,"									""//div[@class='lfr-component lfr-menu-list']/ul/li[3]/a"")) {
+							break;
+						}
+					}
+					catch (Exception e) {
+					}
+
+					Thread.sleep(1000);
+				}
+
+				selenium.click(RuntimeVariables.replace(
+						""//div[@class='lfr-component lfr-menu-list']/ul/li[3]/a""));
+				selenium.waitForPageToLoad(""30000"");
+				loadRequiredJavaScriptModules();
+				assertTrue(selenium.getConfirmation()
+								   .matches(""^Are you sure you want to delete this[\\s\\S]$""));
+
+			case 4:
+
+				boolean bookmarksFolder4Present = selenium.isElementPresent(
+						""//td[4]/span/ul/li/strong/a"");
+
+				if (!bookmarksFolder4Present) {
+					label = 5;
+
+					continue;
+				}
+
+				selenium.clickAt(""//td[4]/span/ul/li/strong/a"",
+					RuntimeVariables.replace(""""));
+",3.1714285714285713
+sample_00188,"	@Override
+	public void run(RunNotifier notifier) {
+		TestResult result= new TestResult();
+		result.addListener(createAdaptingListener(notifier));
+		fTest.run(result);
+",3.3636363636363638
+sample_00071,"import net.sourceforge.squirrel_sql.fw.util.ICommand;
+import net.sourceforge.squirrel_sql.fw.util.Resources;
+import net.sourceforge.squirrel_sql.fw.util.StringManager;
+import net.sourceforge.squirrel_sql.fw.util.StringManagerFactory;
+import net.sourceforge.squirrel_sql.plugins.refactoring.commands.AddAutoIncrementCommand;
+
+public class AddAutoIncrementAction extends AbstractRefactoringAction
+{
+	private static final long serialVersionUID = -5316665324698095673L;
+
+	/**
+	 * Internationalized strings for this class.
+	 */
+	private static final StringManager s_stringMgr =
+		StringManagerFactory.getStringManager(AddAutoIncrementAction.class);
+
+	private static interface i18n
+	{
+		String ACTION_PART = s_stringMgr.getString(""AddAutoIncrementAction.actionPart"");
+
+		String OBJECT_PART = s_stringMgr.getString(""Shared.tableObject"");
+
+		String SINGLE_OBJECT_MESSAGE =
+			s_stringMgr.getString(""Shared.singleObjectMessage"", OBJECT_PART, ACTION_PART);
+	}
+
+	public AddAutoIncrementAction(final IApplication app, final Resources rsrc)
+	{
+		super(app, rsrc);
+	}
+",3.4923076923076923
+sample_00106,"/**
+ * @author Brian Wing Shun Chan
+ */
+public class UnitConverterTestPlan extends BaseTestSuite {
+
+	public static Test suite() {
+		TestSuite testSuite = new TestSuite();
+
+		testSuite.addTest(PortletTestPlan.suite());
+		testSuite.addTest(UnitTestPlan.suite());
+",4.1891891891891895
+sample_00270,"public void targetAdded(TargetEvent e) {
+            if (!updatingSelection) {
+                updatingSelection = true;
+                Object[] targets = e.getAddedTargets();
+
+                int rows = getRowCount();
+                for (int i = 0; i < targets.length; i++) {
+                    Object target = targets[i];
+                    if (target instanceof Fig) {
+                        target = ((Fig) target).getOwner();
+                    }
+                    for (int j = 0; j < rows; j++) {
+                        Object rowItem =
+                            ((DefaultMutableTreeNode)
+                                    getPathForRow(j).getLastPathComponent())
+                            .getUserObject();
+                        if (rowItem == target) {
+                            updatingSelectionViaTreeSelection = true;
+                            addSelectionRow(j);
+                            updatingSelectionViaTreeSelection = false;
+                        }
+                    }
+                }
+
+                if (getSelectionCount() > 0) {
+                    scrollRowToVisible(getSelectionRows()[0]);
+                }
+                updatingSelection = false;
+            }
+            // setTargets(e.getNewTargets());
+        }",3.111111111111111
+sample_00348,"@Test
+	public void testImplicitJoining() throws Exception {
+		assertFalse( JtaStatusHelper.isActive( TestingJtaPlatformImpl.INSTANCE.getTransactionManager() ) );
+
+		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
+		assertTrue( JtaStatusHelper.isActive( TestingJtaPlatformImpl.INSTANCE.getTransactionManager() ) );
+
+		SessionImplementor session = (SessionImplementor) sessionFactory().withOptions().autoJoinTransactions( false ).openSession();
+
+		session.getFlushMode();
+	}",3.3333333333333335
+sample_00102," */
+
+package com.liferay.portalweb.portal.dbupgrade.sampledata523.shopping.coupon;
+
+import com.liferay.portalweb.portal.BaseTestCase;
+import com.liferay.portalweb.portal.util.RuntimeVariables;
+
+/**
+ * @author Brian Wing Shun Chan
+ */
+public class ViewCouponTest extends BaseTestCase {
+	public void testViewCoupon() throws Exception {
+		selenium.open(""/user/joebloggs/home/"");
+		loadRequiredJavaScriptModules();
+
+		for (int second = 0;; second++) {
+			if (second >= 90) {
+				fail(""timeout"");
+			}
+
+			try {
+				if (selenium.isElementPresent(""link=Communities I Own"")) {
+					break;
+				}
+			}
+			catch (Exception e) {
+			}
+
+			Thread.sleep(1000);
+		}
+",3.515957446808511
