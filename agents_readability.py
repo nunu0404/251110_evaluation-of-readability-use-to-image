@@ -1,22 +1,31 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import json
 import math
-from typing import Dict, List
+import re
+from typing import Dict, List, Tuple, Optional
+from statistics import mean
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageFilter, ImageOps
 
 from llm_client import generate_chat_completion, generate_multimodal_completion
 from vision_encoder import encode_image
 from code_metrics import analyze_code
 
+try:
+    import pytesseract
+except ImportError:
+    pytesseract = None
 
-def _safe_json_parse(payload: str) -> Dict[str, str]:
-    if not payload or payload.startswith("ERROR:"):
+
+# ---------------------------------------------------------------------------#
+# Utility helpers
+# ---------------------------------------------------------------------------#
+def _safe_json_parse(payload: str) -> Dict[str, object]:
+    if not payload or payload.startswith("ERROR"):
         return {}
-    start = payload.find("{")
-    end = payload.rfind("}")
+    start, end = payload.find("{"), payload.rfind("}")
     if start == -1 or end == -1 or end <= start:
         return {}
     snippet = payload[start : end + 1]
@@ -30,8 +39,259 @@ def _clamp_score(value: float, default: float = 3.0) -> float:
     try:
         score = float(value)
     except (TypeError, ValueError):
-        return default
-    return float(max(1.0, min(5.0, score)))
+        score = default
+    return float(np.clip(round(score, 2), 1.0, 5.0))
+
+
+def _summarize_features(values: Dict[str, float]) -> str:
+    return "\n".join(f"- {k}: {v:.3f}" for k, v in values.items())
+
+
+# ---------------------------------------------------------------------------#
+# Visual feature extraction
+# ---------------------------------------------------------------------------#
+def _load_gray_image(path: str) -> np.ndarray:
+    img = Image.open(path).convert("L")
+    img = ImageOps.equalize(img.filter(ImageFilter.SMOOTH))
+    return np.array(img, dtype=np.float32) / 255.0
+
+
+def _text_mask(arr: np.ndarray) -> np.ndarray:
+    threshold = np.percentile(arr, 40)
+    return (arr < threshold).astype(np.uint8)
+
+
+def _indentation_stats(mask: np.ndarray) -> Tuple[float, float]:
+    leading_cols = []
+    for row in mask:
+        idx = np.where(row > 0)[0]
+        if len(idx):
+            leading_cols.append(idx[0])
+    if not leading_cols:
+        return 0.0, 0.0
+    return float(np.mean(leading_cols)), float(np.std(leading_cols))
+
+
+def _whitespace_clusters(mask: np.ndarray) -> float:
+    col_profile = mask.sum(axis=0) / (mask.shape[0] + 1e-6)
+    diff = np.diff(col_profile)
+    return float(np.mean(np.abs(diff)))
+
+
+def _block_spacing(mask: np.ndarray) -> float:
+    row_profile = mask.sum(axis=1)
+    blank_runs, run = [], 0
+    for count in row_profile:
+        if count == 0:
+            run += 1
+        elif run:
+            blank_runs.append(run)
+            run = 0
+    if run:
+        blank_runs.append(run)
+    if not blank_runs:
+        return 0.0
+    return float(np.mean(blank_runs))
+
+
+def _line_width_variance(mask: np.ndarray) -> float:
+    widths = []
+    for row in mask:
+        cols = np.where(row > 0)[0]
+        widths.append(len(cols))
+    return float(np.std(widths))
+
+
+def _staircase_signal(mask: np.ndarray) -> float:
+    positions = []
+    step = max(1, mask.shape[0] // 200)
+    for row in mask[::step]:
+        idx = np.where(row > 0)[0]
+        if len(idx):
+            positions.append(idx[0])
+    if len(positions) < 5:
+        return 0.0
+    diffs = np.diff(positions)
+    return float(np.mean(diffs > 2) * np.std(diffs))
+
+
+def _structure_attention(path: str, encoder=None, device: str = "cpu") -> Dict[str, float]:
+    if encoder is None:
+        return {
+            "embedding_mean": 0.0,
+            "embedding_std": 0.0,
+            "embedding_max": 0.0,
+            "embedding_min": 0.0,
+            "high_energy_ratio": 0.0,
+        }
+    vec = np.asarray(encode_image(encoder, path, device=device), dtype=np.float32)
+    return {
+        "embedding_mean": float(vec.mean()),
+        "embedding_std": float(vec.std()),
+        "embedding_max": float(vec.max()),
+        "embedding_min": float(vec.min()),
+        "high_energy_ratio": float(np.mean(vec > vec.mean() + vec.std())),
+    }
+
+
+def _visual_descriptors(path: str, encoder=None, device: str = "cpu") -> Dict[str, float]:
+    arr = _load_gray_image(path)
+    mask = _text_mask(arr)
+    indent_mean, indent_std = _indentation_stats(mask)
+    descriptors = {
+        "indent_mean": indent_mean,
+        "indent_std": indent_std,
+        "whitespace_cluster_score": _whitespace_clusters(mask),
+        "block_spacing_avg": _block_spacing(mask),
+        "line_width_std": _line_width_variance(mask),
+        "staircase_signal": _staircase_signal(mask),
+        "ink_ratio": float(mask.mean()),
+    }
+    descriptors.update(_structure_attention(path, encoder=encoder, device=device))
+    return descriptors
+
+
+def _qualitative_bucket(value: float, bands: Tuple[float, float, float]) -> str:
+    low, mid, high = bands
+    if value < low:
+        return "low"
+    if value < mid:
+        return "moderate"
+    if value < high:
+        return "high"
+    return "very high"
+
+
+def _visual_feature_summary(features: Dict[str, float]) -> str:
+    return "\n".join(
+        [
+            f"- indent spread {features.get('indent_std', 0.0):.1f}px ({_qualitative_bucket(features.get('indent_std', 0.0), (4.0, 12.0, 25.0))})",
+            f"- whitespace change {features.get('whitespace_cluster_score', 0.0):.3f}",
+            f"- block spacing {features.get('block_spacing_avg', 0.0):.1f} rows",
+            f"- staircase {features.get('staircase_signal', 0.0):.3f}",
+            f"- ink ratio {features.get('ink_ratio', 0.0):.3f}",
+        ]
+    )
+
+
+def _text_metric_summary(metrics: Dict[str, float]) -> str:
+    keys = [
+        "avg_line_length",
+        "indentation_std",
+        "comment_ratio",
+        "cyclomatic_proxy",
+        "nesting_mean",
+        "snake_case_ratio",
+    ]
+    return "\n".join(f"- {k}: {metrics.get(k, 0.0):.3f}" for k in keys)
+
+
+def _text_highlights(metrics: Dict[str, float]) -> List[str]:
+    highlights: List[str] = []
+    if metrics.get("avg_line_length", 0.0) > 90:
+        highlights.append("Lines exceed 90 characters on average, hurting readability.")
+    elif metrics.get("avg_line_length", 0.0) < 45:
+        highlights.append("Lines stay compact (<45 chars), aiding quick scanning.")
+    if metrics.get("indentation_std", 0.0) > 6.0:
+        highlights.append("Indentation varies widely, indicating uneven nesting.")
+    if metrics.get("comment_ratio", 0.0) < 0.03:
+        highlights.append("Almost no comments are present.")
+    elif metrics.get("comment_ratio", 0.0) > 0.20:
+        highlights.append("Comments are frequent and can aid comprehension.")
+    if metrics.get("cyclomatic_proxy", 1.0) > 12:
+        highlights.append("Control flow is complex with many branches/loops.")
+    if metrics.get("nesting_mean", 0.0) > 2.5 or metrics.get("deep_ratio", 0.0) > 0.25:
+        highlights.append("Deep nesting occurs often; consider flattening logic.")
+    if metrics.get("uppercase_id_ratio", 0.0) > 0.3:
+        highlights.append("Identifiers rely heavily on uppercase naming.")
+    if metrics.get("snake_case_ratio", 0.0) < 0.15:
+        highlights.append("Snake_case naming is rare, reducing consistency.")
+    if not highlights:
+        highlights.append("No extreme metric values detected; readability depends on naming and logic clarity.")
+    return highlights
+
+
+def _summarize_checklist(label: str, scores: Dict[str, float]) -> str:
+    if not scores:
+        return f"{label} 평가 근거 없음."
+    ordered = sorted(scores.items(), key=lambda kv: kv[1], reverse=True)
+    top = ", ".join(f"{k}={v:.1f}" for k, v in ordered[:2])
+    bottom = ", ".join(f"{k}={v:.1f}" for k, v in ordered[-2:])
+    return f"{label} 강점({top}), 취약({bottom})."
+
+
+# ---------------------------------------------------------------------------#
+# OCR helpers
+# ---------------------------------------------------------------------------#
+def _llm_ocr(path: str) -> Tuple[Optional[str], float]:
+    prompt = (
+        "Transcribe the attached code screenshot. "
+        "Preserve indentation, spaces, and blank lines exactly. "
+        "Return ONLY the code inside triple backticks."
+    )
+    response = generate_multimodal_completion(
+        system_prompt="You are a meticulous code transcription agent.",
+        text_prompt=prompt,
+        image_path=path,
+        temperature=0.1,
+    )
+    match = re.search(r"```[a-zA-Z]*\n(.*?)```", response, re.DOTALL)
+    if match:
+        return match.group(1).rstrip(), 0.95
+    if response.strip():
+        return response.strip(), 0.6
+    return None, 0.0
+
+
+def _tesseract_fallback(path: str) -> Optional[str]:
+    if pytesseract is None:
+        return None
+    img = ImageOps.autocontrast(Image.open(path).convert("L"))
+    text = pytesseract.image_to_string(img, config="--psm 6 preserve_interword_spaces=1")
+    return text if text.strip() else None
+
+
+# ---------------------------------------------------------------------------#
+# Textual feature extraction
+# ---------------------------------------------------------------------------#
+def _extra_code_metrics(code: str) -> Dict[str, float]:
+    lines = code.splitlines()
+    stripped = [ln for ln in lines if ln.strip()]
+    tokens = re.findall(r"[A-Za-z_][A-Za-z0-9_]*|==|!=|<=|>=|&&|\|\||[+\-*/%=<>]", code)
+    numbers = re.findall(r"\b\d+(\.\d+)?\b", code)
+    depth_trace, depth = [], 0
+    for ch in code:
+        if ch in "{(":
+            depth += 1
+        elif ch in "})":
+            depth = max(0, depth - 1)
+        depth_trace.append(depth)
+    indentation = [len(ln) - len(ln.lstrip(" \t")) for ln in stripped]
+    comment_lines = sum(ln.strip().startswith(("//", "#")) for ln in lines)
+    return {
+        "line_count": len(lines),
+        "non_empty_ratio": len(stripped) / (len(lines) + 1e-6),
+        "avg_line_length": mean(map(len, stripped)) if stripped else 0.0,
+        "line_length_variance": float(np.var(list(map(len, stripped))) if stripped else 0.0),
+        "indentation_std": float(np.std(indentation) if indentation else 0.0),
+        "comment_ratio": comment_lines / (len(lines) + 1e-6),
+        "token_density": len(tokens) / (len(stripped) + 1e-6),
+        "numeric_ratio": len(numbers) / (len(tokens) + 1e-6),
+        "branching_ratio": sum(tok in {"if", "else", "for", "while", "case"} for tok in tokens)
+        / (len(tokens) + 1e-6),
+        "operator_density": sum(tok in {"+", "-", "*", "/", "==", "!=", "<=", ">="} for tok in tokens)
+        / (len(tokens) + 1e-6),
+        "nesting_mean": float(np.mean(depth_trace)),
+        "nesting_std": float(np.std(depth_trace)),
+        "deep_ratio": sum(d > 3 for d in depth_trace) / (len(depth_trace) + 1e-6),
+        "cyclomatic_proxy": 1
+        + sum(tok in {"if", "else if", "for", "while", "catch", "case"} for tok in tokens),
+        "identifier_len_mean": mean(len(tok) for tok in tokens if tok.isidentifier()) if tokens else 0.0,
+        "uppercase_id_ratio": sum(tok.isupper() for tok in tokens if tok.isidentifier())
+        / (len(tokens) + 1e-6),
+        "snake_case_ratio": sum("_" in tok for tok in tokens if tok.isidentifier())
+        / (len(tokens) + 1e-6),
+    }
 
 
 class VisualAgent:
@@ -41,236 +301,173 @@ class VisualAgent:
         self.mode = mode
 
     def evaluate(self, image_path: str) -> Dict[str, object]:
-        layout_metrics = _analyze_layout(image_path)
-        if self.mode == "multimodal":
-            multimodal_result = self._evaluate_multimodal(image_path, layout_metrics)
-            if multimodal_result is not None:
-                return multimodal_result
-            print("[VisualAgent] Falling back to heuristic pipeline for image:", image_path, flush=True)
-        return self._evaluate_with_features(image_path, layout_metrics)
-
-    def _evaluate_multimodal(self, image_path: str, layout_metrics: Dict[str, float]) -> Dict[str, object] | None:
-        heuristic = _heuristic_layout_score(layout_metrics)
-        qualitative = _describe_layout(layout_metrics)
-        summary_text = (
-            "참고용 수치:\n"
-            f"- line_count: {layout_metrics['line_count']}\n"
-            f"- empty_line_ratio: {layout_metrics['empty_line_ratio']:.2f}\n"
-            f"- indent_std: {layout_metrics['indent_std']:.2f}\n"
-            f"- ink_ratio: {layout_metrics['ink_ratio']:.2f}\n"
-            f"- line_density: {layout_metrics['line_density']:.2f}\n"
-            f"- block_transitions: {layout_metrics['block_transitions']}\n"
-            f"- brightness mean/std: {layout_metrics['mean_intensity']:.2f}/{layout_metrics['std_intensity']:.2f}\n"
-            f"- heuristic_layout_score: {heuristic:.2f}\n"
-            f"- qualitative_notes: {qualitative}\n"
-        )
-        user_prompt = (
-            "첨부된 코드 이미지를 평가하는 SE-Jury 스타일 시각 심사관입니다.\n"
-            "평가 단계:\n"
-            "1) 들여쓰기 일관성, 빈 줄/공백 비율, 블록 구분, 주석 정렬, 행 길이/밀도를 각각 살펴 긍정/부정 신호를 정리합니다.\n"
-            "2) 이미지에서 직접 관찰한 내용이 수치 메모와 다르면, 이미지 관찰을 우선합니다.\n"
-            "3) 전체 인상을 1.0(매우 나쁨)~5.0(매우 우수) 범위로 결정하고 한 문장 이유를 작성합니다.\n"
-            "4) 최종 출력은 JSON 한 줄만 사용합니다. 예시: {\"layout_score\": 4.0, \"reason\": \"...\"}\n"
-            "참고 수치:\n"
-            f"{summary_text}\n"
-            "점수 분포가 한곳에 몰리지 않도록 1.0~5.0 전체 범위를 적극적으로 활용하세요."
+        features = _visual_descriptors(image_path, encoder=self.model, device=self.device)
+        feature_summary = _visual_feature_summary(features)
+        prompt = (
+            "Judge the layout readability of the attached code screenshot. "
+            "Rely only on visual cues from the PNG: indentation staircase, whitespace spacing, block grouping, alignment, "
+            "and overall visual nesting hints. Provide 1.00-5.00 scores for indentation clarity, block grouping, "
+            "whitespace balance, line-width moderation, and visual nesting cues, then summarize with a concise layout_score "
+            "and confidence. Do NOT reuse example numbers; infer them from the actual image plus measurements. "
+            "Respond ONLY with JSON structured as "
+            "{\"layout_score\": VALUE, \"reason\": \"...\", \"checklist\": {\"indentation\": VALUE, \"block_grouping\": VALUE, "
+            "\"whitespace\": VALUE, \"line_width\": VALUE, \"nesting_visual\": VALUE}, \"confidence\": VALUE}. "
+            "\nMeasurements derived from the image:\n"
+            f"{feature_summary}"
         )
         response = generate_multimodal_completion(
-            system_prompt="당신은 코드의 시각적 레이아웃을 평가하는 전문가입니다.",
-            text_prompt=user_prompt,
+            system_prompt="You are a meticulous visual readability critic.",
+            text_prompt=prompt,
             image_path=image_path,
-            temperature=0.2,
+            temperature=0.3,
         )
-        print(f"[VisualAgent-multimodal] image={image_path} response={response}", flush=True)
         data = _safe_json_parse(response)
-        if not data:
-            return None
-        score = _clamp_score(data.get("layout_score"), heuristic)
-        reason = data.get("reason") or "image-based assessment"
-        return {"layout_score": score, "reason": reason}
-
-    def _evaluate_with_features(self, image_path: str, layout_metrics: Dict[str, float]) -> Dict[str, object]:
-        features = encode_image(self.model, image_path, device=self.device)
-        stats = np.array(features, dtype=np.float32)
-        proxy_score = _heuristic_layout_score(layout_metrics)
-        summary = (
-            "feature_stats: "
-            f"mean={stats.mean():.4f}, std={stats.std():.4f}, "
-            f"min={stats.min():.4f}, max={stats.max():.4f}, "
-            f"abs_sum={np.abs(stats).sum():.2f}; "
-            "layout_metrics: "
-            f"lines={layout_metrics['line_count']}, empty_line_ratio={layout_metrics['empty_line_ratio']:.2f}, "
-            f"indent_std={layout_metrics['indent_std']:.2f}, ink_ratio={layout_metrics['ink_ratio']:.2f}, "
-            f"density={layout_metrics['line_density']:.2f}, "
-            f"block_transitions={layout_metrics['block_transitions']}, "
-            f"brightness_mean={layout_metrics['mean_intensity']:.2f}, brightness_std={layout_metrics['std_intensity']:.2f}; "
-            f"heuristic_layout_score={proxy_score:.2f}"
-        )
-        qualitative = _describe_layout(layout_metrics)
-        system_prompt = "당신은 코드의 시각적 레이아웃을 기반으로 가독성을 평가하는 전문가입니다."
-        user_prompt = (
-            "다음은 코드 이미지에서 추출한 시각적 특징입니다:\n"
-            f"{summary}\n"
-            f"관찰 메모: {qualitative}\n"
-            f"수치 기반 예비 가독성 점수(참고용): {proxy_score:.2f}\n"
-            "SE-Jury 심사 방식으로, 들여쓰기/공백/블록/주석/행 밀도 기준을 각각 검토한 뒤 "
-            "1.0~5.0 범위에서 최종 layout_score를 정하세요. 이미지를 직접 본 판단을 우선하고, "
-            "점수가 단일 값에 치우치지 않도록 전체 범위를 적극적으로 사용합니다.\n"
-            '최종 출력은 JSON 한 줄: {"layout_score": float, "reason": "..."}'
-        )
-        response = generate_chat_completion(system_prompt, user_prompt, temperature=0.35)
-        print(f"[VisualAgent-heuristic] image={image_path} response={response}", flush=True)
-        data = _safe_json_parse(response)
-        score = _clamp_score(data.get("layout_score"), proxy_score)
-        reason = data.get("reason") or "heuristic fallback"
-        return {"layout_score": score, "reason": reason}
-
+        if not data or "layout_score" not in data:
+            raise RuntimeError("VisualAgent LLM response missing layout_score")
+        data["layout_score"] = _clamp_score(data.get("layout_score"), 3.0)
+        data["confidence"] = float(np.clip(data.get("confidence", 0.65), 0.15, 0.95))
+        checklist = data.get("checklist", {}) or {}
+        data["checklist"] = checklist
+        data.setdefault("reason", "Visual assessment derived solely from the screenshot and measurements.")
+        return data
 
 class TextAgent:
     def evaluate(self, code: str) -> Dict[str, object]:
-        system_prompt = "당신은 코드 가독성 평가 전문가입니다."
-        metrics = analyze_code(code)
-        checklist = (
-            f"- line_count: {metrics['line_count']}\n"
-            f"- avg_line_length: {metrics['avg_line_len']:.1f}, max_line_length: {metrics['max_line_len']}\n"
-            f"- avg_indent: {metrics['avg_indent']:.1f}, indent_std: {metrics['indent_std']:.1f}, estimated_depth: {metrics['estimated_depth']:.1f}\n"
-            f"- blank_ratio: {metrics['blank_ratio']:.2f}, comment_ratio: {metrics['comment_ratio']:.2f}\n"
+        base = analyze_code(code)
+        extra = _extra_code_metrics(code)
+        merged = {**base, **extra}
+        metric_summary = _text_metric_summary(merged)
+        highlights = _text_highlights(merged)
+        highlight_text = "\n".join(f"- {msg}" for msg in highlights)
+        prompt = (
+            "You are an expert readability reviewer. "
+            "Consider naming, indentation discipline, nesting transitions, block length variation, comment density, "
+            "and overall cognitive load. Use the numeric metrics to justify a broad use of the 1-5 scale. "
+            "Scores must reflect the provided measurements (e.g., long lines -> lower scores, rich comments -> higher scores); "
+            "do not repeat the same numeric pattern across different snippets, and use at least two decimal places for each score. "
+            "Return ONLY JSON such as "
+            "{\"text_score\": SCORE, \"reason\": \"...\", "
+            "\"checklist\": {\"naming\": SCORE, \"indentation\": SCORE, "
+            "\"cognitive_load\": SCORE, \"structure\": SCORE, \"documentation\": SCORE}}."
         )
-        user_prompt = (
-            "다음 코드를 분석하세요:\n"
-            f"{code}\n\n"
-            "참고용 코드 통계:\n"
-            f"{checklist}\n"
-            "네이밍, 들여쓰기 일관성, 중첩 깊이, 함수/블록 길이, 직관성, 주석 품질 등을 기준으로 "
-            "1.0~5.0의 text_score와 한 문장 reason을 JSON으로 출력하세요. "
-            '형식: {"text_score": float, "reason": "..."}'
+        response = generate_chat_completion(
+            system_prompt="You score code readability with nuanced judgement.",
+            user_prompt=(
+                prompt
+                + "\n\nMetric highlights:\n"
+                + highlight_text
+                + "\n\nMetrics:\n"
+                + metric_summary
+                + "\n\nCode:\n"
+                + code
+            ),
+            temperature=0.45,
         )
-        response = generate_chat_completion(system_prompt, user_prompt, temperature=0.2)
-        print(f"[TextAgent] response={response}", flush=True)
         data = _safe_json_parse(response)
-        score = _clamp_score(data.get("text_score"), 3.0)
-        reason = data.get("reason") or "fallback"
-        return {"text_score": score, "reason": reason}
-
-
-class AggregatorAgent:
-    def evaluate_inputs(self, layout: Dict[str, object], text: Dict[str, object]):
-        return self.aggregate(layout, text)
-
-    def aggregate(self, layout: Dict[str, object], text: Dict[str, object]) -> Dict[str, object]:
-        system_prompt = "당신은 두 명의 심사위원 평가를 통합하는 판정자입니다."
-        layout_score = float(layout.get("layout_score", 3.0))
-        text_score = float(text.get("text_score", 3.0))
-        layout_reason = layout.get("reason", "")
-        text_reason = text.get("reason", "")
-        user_prompt = (
-            f"레이아웃 평가: 점수={layout_score:.2f}, 이유={layout_reason}\n"
-            f"텍스트 평가: 점수={text_score:.2f}, 이유={text_reason}\n"
-            "두 평가를 종합하여 최종 가독성 점수 final_score(1.0~5.0)를 정하고, 한두 문장으로 근거를 설명하세요. "
-            'JSON으로만 출력하세요. 형식: {"final_score": float, "reason": "..."}'
+        if not data or "text_score" not in data:
+            raise RuntimeError("TextAgent LLM response missing text_score")
+        data["text_score"] = _clamp_score(data.get("text_score"), 3.0)
+        checklist = data.get("checklist", {}) or {}
+        checklist.setdefault("naming", float(np.clip(extra.get("snake_case_ratio", 0.0) * 10 + 2.5, 1.0, 5.0)))
+        checklist.setdefault("indentation", float(np.clip(5.0 - extra.get("indentation_std", 0.0) / 2.0, 1.0, 5.0)))
+        checklist.setdefault(
+            "cognitive_load", float(np.clip(5.0 - extra.get("cyclomatic_proxy", 1.0) / 4.0, 1.0, 5.0))
         )
-        response = generate_chat_completion(system_prompt, user_prompt, temperature=0.05)
-        print(f"[AggregatorAgent] response={response}", flush=True)
+        checklist.setdefault(
+            "structure", float(np.clip(5.0 - (extra.get("nesting_std", 0.0) + extra.get("deep_ratio", 0.0) * 5), 1.0, 5.0))
+        )
+        checklist.setdefault(
+            "documentation", float(np.clip(extra.get("comment_ratio", 0.0) * 20 + 1.0, 1.0, 5.0))
+        )
+        data["checklist"] = checklist
+        data.setdefault("reason", _summarize_checklist("text", checklist))
+        return data
+
+class VisualOCRTextAgent:
+    def evaluate(self, image_path: str) -> Dict[str, object]:
+        text, conf = _llm_ocr(image_path)
+        if (not text or conf < 0.65) and pytesseract is not None:
+            fallback = _tesseract_fallback(image_path)
+            if fallback:
+                text, conf = fallback, 0.45
+        if not text:
+            raise RuntimeError("OCR failed")
+        text_agent = TextAgent()
+        result = text_agent.evaluate(text)
+        blended = conf * result["text_score"] + (1 - conf) * 3.0
+        result["text_score"] = _clamp_score(blended, 3.0)
+        result["ocr_confidence"] = conf
+        base_reason = result.get("reason", "").strip()
+        ocr_note = f"OCR confidence {conf:.2f}"
+        result["reason"] = (base_reason + " " + ocr_note).strip() if base_reason else ocr_note
+        return result
+
+
+
+class HybridAgent:
+    def __init__(self, vision_model, device: str = "cpu") -> None:
+        self.model = vision_model
+        self.device = device
+
+    def evaluate(self, code: str, image_path: str) -> Dict[str, object]:
+        visual_features = _visual_descriptors(image_path, encoder=self.model, device=self.device)
+        visual_summary = _visual_feature_summary(visual_features)
+        layout_hint = float(
+            np.clip(
+                4.2
+                - visual_features.get("indent_std", 0.0) / 18.0
+                - visual_features.get("whitespace_cluster_score", 0.0) * 35.0
+                + visual_features.get("staircase_signal", 0.0) * 1.2,
+                1.0,
+                5.0,
+            )
+        )
+
+        base = analyze_code(code)
+        extra = _extra_code_metrics(code)
+        merged = {**base, **extra}
+        metric_summary = _text_metric_summary(merged)
+        highlights = "\n".join(_text_highlights(merged)[:3])
+        text_hint = float(
+            np.clip(
+                3.9
+                - extra.get("cyclomatic_proxy", 1.0) / 6.0
+                - extra.get("nesting_mean", 0.0) / 2.0
+                + extra.get("comment_ratio", 0.0) * 9.0,
+                1.0,
+                5.0,
+            )
+        )
+
+        code_excerpt = "\n".join(code.splitlines()[:80])
+        if len(code_excerpt) > 1500:
+            code_excerpt = code_excerpt[:1500] + "\n..."
+
+        prompt = (
+            "You are a multimodal readability judge. "
+            "Use BOTH the PNG screenshot (spacing, indentation staircase, alignment) and the raw code excerpt/metrics "
+            "to output a single readability score in JSON {\"hybrid_score\": SCORE, \"reason\": \"...\"}. "
+            "Auto-estimated anchors: "
+            f"layout≈{layout_hint:.2f}, text≈{text_hint:.2f}; use them only as guidance and adjust freely if the evidence disagrees."
+            "\nVisual cues:\n"
+            f"{visual_summary}"
+            + "\n\nMetric highlights:\n"
+            + highlights
+            + "\n\nMetrics:\n"
+            + metric_summary
+            + "\n\nCode excerpt:\n```code\n"
+            + code_excerpt
+            + "\n```"
+        )
+        response = generate_multimodal_completion(
+            system_prompt="You combine visual and textual cues to rate readability.",
+            text_prompt=prompt,
+            image_path=image_path,
+            temperature=0.35,
+        )
         data = _safe_json_parse(response)
-        blended_mean = (layout_score + text_score) / 2.0
-        if not data:
-            final_score = blended_mean
-            return {"final_score": _clamp_score(final_score), "reason": "average of two agents"}
-        llm_score = _clamp_score(data.get("final_score"), blended_mean)
-        reason = data.get("reason") or "average of two agents"
-        final_score = _clamp_score(0.6 * llm_score + 0.4 * blended_mean)
-        return {"final_score": final_score, "reason": reason}
-
-
-__all__ = ["VisualAgent", "TextAgent", "AggregatorAgent"]
-
-
-def _analyze_layout(image_path: str) -> Dict[str, float]:
-    image = Image.open(image_path).convert("L")
-    arr = np.array(image, dtype=np.float32) / 255.0
-    background = float(np.percentile(arr, 5))
-    signal_threshold = background + 0.05
-    signal_mask = arr > signal_threshold
-
-    ink_ratio = float(signal_mask.mean())
-    row_signal = signal_mask.sum(axis=1)
-    non_empty_rows = row_signal > 0
-    line_count = int(non_empty_rows.sum())
-    empty_line_ratio = float((row_signal == 0).mean())
-
-    indent_positions: List[float] = []
-    for row_idx in np.where(non_empty_rows)[0]:
-        cols = np.where(signal_mask[row_idx])[0]
-        if cols.size:
-            indent_positions.append(cols[0] / arr.shape[1])
-    indent_std = float(np.std(indent_positions)) if indent_positions else 0.0
-
-    line_density = float(row_signal[non_empty_rows].mean() / arr.shape[1]) if line_count else 0.0
-    block_transitions = int(np.sum(np.abs(np.diff(non_empty_rows.astype(np.int8)))))
-
-    return {
-        "ink_ratio": ink_ratio,
-        "line_count": line_count,
-        "empty_line_ratio": empty_line_ratio,
-        "indent_std": indent_std,
-        "line_density": line_density,
-        "block_transitions": block_transitions,
-        "mean_intensity": float(arr.mean()),
-        "std_intensity": float(arr.std()),
-    }
-
-
-def _describe_layout(metrics: Dict[str, float]) -> str:
-    comments: List[str] = []
-    if metrics["empty_line_ratio"] > 0.35:
-        comments.append("빈 줄 비율이 높아 블록들이 많이 분리되어 있음")
-    elif metrics["empty_line_ratio"] < 0.1:
-        comments.append("빈 줄이 거의 없어 코드가 빽빽하게 배치됨")
-
-    if metrics["indent_std"] < 0.03:
-        comments.append("들여쓰기 시작 위치가 매우 일정함")
-    elif metrics["indent_std"] > 0.12:
-        comments.append("들여쓰기 폭이 들쭉날쭉함")
-
-    if metrics["line_density"] > 0.25:
-        comments.append("각 행의 문자 밀도가 높은 편")
-    elif metrics["line_density"] < 0.12:
-        comments.append("행당 문자 밀도가 낮아 여백이 많음")
-
-    if metrics["block_transitions"] > 40:
-        comments.append("블록 전환이 잦아 구조가 자주 바뀜")
-    elif metrics["block_transitions"] < 15:
-        comments.append("블록 전환이 적어 단조로운 구조")
-
-    if not comments:
-        comments.append("표준적인 밀도와 들여쓰기 패턴")
-    return "; ".join(comments)
-
-
-def _heuristic_layout_score(metrics: Dict[str, float]) -> float:
-    score = 3.0
-    if metrics["indent_std"] < 0.03:
-        score += 0.4
-    elif metrics["indent_std"] > 0.12:
-        score -= 0.4
-
-    if metrics["empty_line_ratio"] > 0.35:
-        score -= 0.2
-    elif metrics["empty_line_ratio"] < 0.1:
-        score += 0.1
-
-    if metrics["line_density"] > 0.3:
-        score -= 0.2
-    elif metrics["line_density"] < 0.12:
-        score += 0.1
-
-    if metrics["block_transitions"] < 15:
-        score += 0.1
-    elif metrics["block_transitions"] > 45:
-        score -= 0.2
-
-    if metrics["ink_ratio"] < 0.12:
-        score += 0.1
-    elif metrics["ink_ratio"] > 0.35:
-        score -= 0.2
-    return float(max(1.0, min(5.0, score)))
+        if not data or "hybrid_score" not in data:
+            raise RuntimeError("HybridAgent LLM response missing hybrid_score")
+        data["hybrid_score"] = _clamp_score(data.get("hybrid_score"), 3.0)
+        data.setdefault("reason", "Combined visual+text evaluation of layout and structure.")
+        return data
